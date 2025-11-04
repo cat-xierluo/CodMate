@@ -36,7 +36,7 @@ struct SessionListColumnView: View {
                 .padding(.bottom, 8)
 
             if isLoading && sections.isEmpty {
-                ProgressView("Scanning…")
+                ProgressView("status.scanning")
                     .padding(.vertical)
             }
 
@@ -45,9 +45,9 @@ struct SessionListColumnView: View {
                 VStack(spacing: 12) {
                     Spacer(minLength: 12)
                     ContentUnavailableView(
-                        "No Sessions", systemImage: "tray",
+                        "status.noSessions", systemImage: "tray",
                         description: Text(
-                            "Adjust directories or launch Codex CLI to generate new session logs."))
+                            "status.noSessionsHint"))
                         .frame(maxWidth: .infinity)
 
                     // Primary action: New Session (mirrors Sidebar › Project row › New Session)
@@ -57,15 +57,15 @@ struct SessionListColumnView: View {
                             viewModel.newSession(project: p)
                         }
                     } label: {
-                        Label("New Session", systemImage: "plus")
+                        Label("actions.new", systemImage: "plus")
                             .frame(minWidth: 140)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.regular)
                     .disabled(selected == nil)
                     .help(selected == nil
-                          ? "Select a project in the sidebar to start a new session"
-                          : "Start a new session in \(projectDisplayName(selected!))")
+                          ? "help.selectProjectForNew"
+                          : "help.startNewInProject \(projectDisplayName(selected!))")
 
                     Spacer()
                 }
@@ -106,17 +106,17 @@ struct SessionListColumnView: View {
                                 .contextMenu {
                                     if session.source == .codex {
                                         Button { onResume(session) } label: {
-                                            Label("Resume", systemImage: "play.fill")
+                                            Label("actions.resume", systemImage: "play.fill")
                                         }
                                     }
                                     Divider()
                                     Button { Task { await viewModel.beginEditing(session: session) } } label: {
-                                        Label("Edit Title & Comment", systemImage: "pencil")
+                                        Label("actions.editTitleComment", systemImage: "pencil")
                                     }
                                     // Assign to Project submenu
                                     if !viewModel.projects.isEmpty {
                                         Menu {
-                                            Button("New Project…") {
+                                            Button("actions.newProject") {
                                                 newProjectPrefill = prefillForProject(from: session)
                                                 newProjectAssignIDs = [session.id]
                                                 showNewProjectSheet = true
@@ -128,18 +128,18 @@ struct SessionListColumnView: View {
                                                 }
                                             }
                                         } label: {
-                                            Label("Assign to Project…", systemImage: "folder.badge.plus")
+                                            Label("actions.assignToProject", systemImage: "folder.badge.plus")
                                         }
                                     }
                                     Button { onReveal(session) } label: {
-                                        Label("Reveal in Finder", systemImage: "folder")
+                                        Label("actions.revealInFinder", systemImage: "folder")
                                     }
                                     Button { onExportMarkdown(session) } label: {
-                                        Label("Export Markdown", systemImage: "square.and.arrow.down")
+                                        Label("actions.exportMarkdown", systemImage: "square.and.arrow.down")
                                     }
                                     Divider()
                                     Button(role: .destructive) { onDeleteRequest(session) } label: {
-                                        Label("Delete Session", systemImage: "trash")
+                                        Label("actions.deleteSession", systemImage: "trash")
                                     }
                                 }
                             }

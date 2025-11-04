@@ -1,0 +1,4538 @@
+diff --git a/localization/PATCH-MANAGEMENT.md b/localization/PATCH-MANAGEMENT.md
+new file mode 100644
+index 0000000..c8e4eb1
+--- /dev/null
++++ b/localization/PATCH-MANAGEMENT.md
+@@ -0,0 +1,525 @@
++# CodMate 本地化补丁管理指南
++
++> 创建日期：2025-11-03
++> 最后更新：2025-11-03
++
++## 📋 目录
++
++- [概述](#概述)
++- [文件结构](#文件结构)
++- [工作流程](#工作流程)
++- [命令参考](#命令参考)
++- [故障排除](#故障排除)
++- [最佳实践](#最佳实践)
++
++---
++
++## 概述
++
++CodMate 本地化补丁管理系统使用 Git 补丁机制来管理你的中文本地化修改与上游代码的同步。
++
++### 核心概念
++
++**补丁 (Patch)**: 一个文本文件，描述了对代码的修改，可以应用到其他代码库。
++
++**上游 (Upstream)**: 原始项目仓库（`https://github.com/loocor/codmate`）
++
++**Fork**: 你的项目副本（`https://github.com/cat-xierluo/CodMate`）
++
++**本地化分支**: 包含你中文本地化修改的分支
++
++---
++
++## 文件结构
++
++```
++localization/
++├── scripts/
++│   ├── sync-upstream.sh       # 同步上游代码脚本
++│   ├── generate-patch.sh      # 生成补丁脚本
++│   └── check-conflicts.sh     # 冲突检查脚本
++├── patches/                   # 自动创建的补丁目录
++│   ├── localization-20251103-143000-main.patch
++│   └── ...
++├── PATCH-MANAGEMENT.md        # 本文件
++├── SYNC-WORKFLOW.md          # 工作流程文档
++├── localization-keys.json    # 本地化键名映射
++└── zh-Hans/                  # 中文翻译文件
++    ├── Localizable.strings
++    └── ...
++```
++
++---
++
++## 工作流程
++
++### 场景 1：首次设置本地化
++
++```bash
++# 1. 确认你的 fork 已与上游同步
++git status
++git log --oneline -5
++
++# 2. 创建本地化修改
++# ... 编辑代码 ...
++
++# 3. 生成补丁
++cd localization/
++chmod +x scripts/*.sh
++./generate-patch.sh
++
++# 4. 测试补丁
++git checkout .
++./check-conflicts.sh
++
++# 5. 提交本地化修改到你的 fork
++git add .
++git commit -m "feat: add Chinese localization"
++git push origin main
++```
++
++### 场景 2：上游有更新，需要同步
++
++```bash
++# 方法 1：使用自动同步脚本（推荐）
++cd localization/
++./sync-upstream.sh
++
++# 方法 2：手动同步
++# 1. 生成当前补丁
++./generate-patch.sh
++
++# 2. 同步上游
++git fetch upstream
++git reset --hard upstream/main
++
++# 3. 应用补丁
++ls patches/
++git apply patches/localization-20251103-143000-main.patch
++
++# 4. 解决冲突（如果有）
++# 编辑冲突文件，然后：
++git add .
++git commit -m "resolve conflicts in localization"
++
++# 5. 推送更新
++git push origin main
++```
++
++### 场景 3：只想检查是否有更新
++
++```bash
++cd localization/
++./sync-upstream.sh --check-only
++
++# 输出：
++# [INFO] 检查上游更新...
++# [INFO] 有可用更新
++# 或
++# [INFO] 已是最新
++```
++
++### 场景 4：处理补丁冲突
++
++```bash
++# 1. 检查冲突
++cd localization/
++./check-conflicts.sh --detailed
++
++# 2. 尝试应用补丁
++git apply patches/your-patch.patch
++
++# 3. 如果有冲突，会显示：
++# error: patch failed: Sources/CodMate/Views/ContentView.swift:231
++# error: Sources/CodMate/Views/ContentView.swift: patch does not apply
++
++# 4. 手动解决冲突
++# 打开冲突的文件，找到 <<<<<<<, =======, >>>>>>> 标记
++# 手动编辑内容，保留你想要的修改
++
++# 5. 标记冲突已解决
++git add Sources/CodMate/Views/ContentView.swift
++
++# 6. 继续应用其他文件...
++# 或使用 --continue 选项（如果脚本支持）
++
++# 7. 生成新的补丁
++./generate-patch.sh --since HEAD
++```
++
++---
++
++## 命令参考
++
++### sync-upstream.sh - 同步脚本
++
++**基本用法**：
++```bash
++./sync-upstream.sh
++```
++
++**选项**：
++- `--dry-run` 试运行，显示将要执行的操作但不实际执行
++- `--force` 强制应用补丁，跳过冲突检查
++- `--check-only` 仅检查是否有更新，不同步
++
++**示例**：
++```bash
++# 试运行（推荐）
++./sync-upstream.sh --dry-run
++
++# 强制同步（谨慎使用）
++./sync-upstream.sh --force
++
++# 检查更新
++./sync-upstream.sh --check-only
++```
++
++---
++
++### generate-patch.sh - 补丁生成脚本
++
++**基本用法**：
++```bash
++./generate-patch.sh
++```
++
++**选项**：
++- `--output <文件>` 指定补丁输出文件
++- `--since <提交>` 从指定提交开始生成补丁
++- `--all` 包含所有更改（默认只包含本地化相关）
++- `--verify` 验证生成的补丁
++
++**示例**：
++```bash
++# 生成当前更改的补丁
++./generate-patch.sh
++
++# 指定输出文件
++./generate-patch.sh --output my-changes.patch
++
++# 从过去5个提交开始
++./generate-patch.sh --since HEAD~5
++
++# 验证补丁
++./generate-patch.sh --verify
++```
++
++---
++
++### check-conflicts.sh - 冲突检查脚本
++
++**基本用法**：
++```bash
++./check-conflicts.sh
++```
++
++**选项**：
++- `--patch <文件>` 检查指定补丁文件
++- `--upstream <提交>` 指定上游提交
++- `--detailed` 显示详细冲突信息
++- `--save-report` 保存报告到文件
++
++**示例**：
++```bash
++# 检查与上游的冲突
++./check-conflicts.sh
++
++# 检查指定补丁
++./check-conflicts.sh --patch patches/my-patch.patch
++
++# 显示详细信息
++./check-conflicts.sh --detailed
++
++# 保存报告
++./check-conflicts.sh --save-report
++```
++
++---
++
++## 故障排除
++
++### 问题 1：脚本无法执行
++
++**症状**：
++```
++bash: ./scripts/sync-upstream.sh: Permission denied
++```
++
++**解决方案**：
++```bash
++chmod +x localization/scripts/*.sh
++```
++
++---
++
++### 问题 2：补丁应用失败
++
++**症状**：
++```
++error: patch failed: Sources/CodMate/Views/ContentView.swift:231
++error: Sources/CodMate/Views/ContentView.swift: patch does not apply
++```
++
++**原因**：
++上游代码在相同位置也做了修改，导致冲突。
++
++**解决方案**：
++```bash
++# 1. 检查冲突详情
++./check-conflicts.sh --detailed
++
++# 2. 手动应用补丁
++git apply patches/your-patch.patch 2>&1 | head -20
++
++# 3. 打开冲突文件，手动解决
++open Sources/CodMate/Views/ContentView.swift
++
++# 4. 搜索标记：<<<<<<<, =======, >>>>>>>
++
++# 5. 解决后标记为已解决
++git add Sources/CodMate/Views/ContentView.swift
++
++# 6. 重新生成补丁
++./generate-patch.sh --since HEAD
++```
++
++---
++
++### 问题 3：上游没有 upstream 远程
++
++**症状**：
++```
++[ERROR] 未配置 upstream 远程仓库
++```
++
++**解决方案**：
++```bash
++git remote add upstream https://github.com/loocor/codmate
++git fetch upstream
++```
++
++---
++
++### 问题 4：工作目录不干净
++
++**症状**：
++```
++error: cannot pull with uncommitted changes
++```
++
++**解决方案**：
++```bash
++# 提交或暂存你的更改
++git stash push -m "暂存本地化修改"
++git stash list
++
++# 同步后恢复
++git stash pop
++```
++
++---
++
++### 问题 5：补丁为空
++
++**症状**：
++```
++[ WARN ] 没有检测到任何更改
++```
++
++**原因**：当前没有本地化相关的修改。
++
++**解决方案**：
++```bash
++# 确认你有修改
++git status
++git diff
++
++# 如果确实有修改，使用 --all 选项
++./generate-patch.sh --all
++```
++
++---
++
++## 最佳实践
++
++### 1. 定期同步
++
++每周至少同步一次上游更新，避免积累太多冲突。
++
++```bash
++# 设置每周提醒或cronjob
++./sync-upstream.sh --check-only
++```
++
++---
++
++### 2. 小步提交
++
++将本地化工作分解为小的提交，便于管理和回滚。
++
++```bash
++# 好的做法
++git add Sources/CodMate/Views/ContentView.swift
++git commit -m "localize: ContentView buttons and labels"
++
++git add Sources/CodMate/Views/SettingsView.swift
++git commit -m "localize: SettingsView general settings"
++```
++
++---
++
++### 3. 测试补丁
++
++每次生成新补丁后都进行测试。
++
++```bash
++# 1. 生成补丁
++./generate-patch.sh
++
++# 2. 检查冲突
++./check-conflicts.sh --detailed
++
++# 3. 验证补丁
++./generate-patch.sh --verify
++
++# 4. 试运行同步
++./sync-upstream.sh --dry-run
++```
++
++---
++
++### 4. 备份重要补丁
++
++```bash
++# 备份关键补丁
++cp patches/localization-20251103-143000-main.patch ~/backup/
++
++# 或创建标签
++git tag localization-backup-20251103
++```
++
++---
++
++### 5. 使用分支进行实验
++
++```bash
++# 创建实验分支
++git checkout -b experiment-new-features
++
++# 修改...
++git add .
++git commit -m "feat: experimental localization"
++
++# 如果实验成功，合并到主分支
++git checkout main
++git merge experiment-new-features
++
++# 如果实验失败，删除分支
++git branch -D experiment-new-features
++```
++
++---
++
++### 6. 记录重要更改
++
++在 `PATCHES.md` 文件中记录重要的补丁：
++
++```markdown
++# 本地化补丁历史
++
++## 2025-11-03 - 初始中文化
++- 添加了 200+ 基础翻译
++- 包含主界面和设置页面本地化
++- 补丁：localization-20251103-143000-main.patch
++
++## 2025-11-10 - 会话管理本地化
++- 添加会话列表和详情页翻译
++- 修复了界面布局问题
++- 补丁：localization-20251110-100000-main.patch
++```
++
++---
++
++### 7. 团队协作
++
++如果你与其他开发者协作本地化：
++
++```bash
++# 1. 确保你的分支是最新的
++git fetch origin
++git rebase origin/main
++
++# 2. 生成补丁分享
++./generate-patch.sh --output team-patch.patch
++
++# 3. 其他成员应用补丁
++git apply team-patch.patch
++```
++
++---
++
++## 常见问题解答
++
++### Q: 我需要保留原始的英文文本吗？
++
++**A**: 不需要。本地化文件会自动处理回退。如果系统语言不是中文，会显示英文原文。
++
++---
++
++### Q: 如何添加新的翻译？
++
++**A**: 编辑 `zh-Hans/Localizable.strings` 文件，然后重新生成并应用补丁。
++
++```bash
++# 1. 添加翻译
++vim zh-Hans/Localizable.strings
++# 添加： "new.key" = "新的翻译";
++
++# 2. 重新生成补丁
++./generate-patch.sh
++
++# 3. 应用补丁
++git apply patches/latest.patch
++```
++
++---
++
++### Q: 多久需要同步一次上游？
++
++**A**: 建议每周一次。如果上游更新频繁（每天都有），可以每2-3天同步一次。
++
++---
++
++### Q: 如果上游放弃了这个项目怎么办？
++
++**A**: 你已经 fork 了项目，可以继续维护你自己的版本。补丁系统保证你可以继续同步任何未来的更新。
++
++---
++
++### Q: 可以回滚补丁吗？
++
++**A**: 可以。使用 Git 的强大回滚功能：
++
++```bash
++# 回滚到补丁应用前
++git reset --hard HEAD~1
++
++# 或者创建一个反补丁
++git diff patches/your-patch.patch | git apply
++```
++
++---
++
++## 资源链接
++
++- [Git 补丁文档](https://git-scm.com/docs/apply)
++- [Git 冲突解决指南](https://git-scm.com/docs/merge)
++- [CodMate 上游项目](https://github.com/loocor/codmate)
++- [你的 Fork 项目](https://github.com/cat-xierluo/CodMate)
++
++---
++
++**祝你本地化工作顺利！** 🚀
++
++如有问题，请查看 `SYNC-WORKFLOW.md` 或在 GitHub 上提交 Issue。
+diff --git a/localization/SYNC-WORKFLOW.md b/localization/SYNC-WORKFLOW.md
+new file mode 100644
+index 0000000..ea35350
+--- /dev/null
++++ b/localization/SYNC-WORKFLOW.md
+@@ -0,0 +1,595 @@
++# CodMate 同步工作流程
++
++> 创建日期：2025-11-03
++> 适用场景：本地化维护者日常操作指南
++
++## 📋 目录
++
++- [日常同步流程](#日常同步流程)
++- [初次设置流程](#初次设置流程)
++- [增量更新流程](#增量更新流程)
++- [紧急回滚流程](#紧急回滚流程)
++- [团队协作流程](#团队协作流程)
++
++---
++
++## 日常同步流程
++
++**适用场景**: 你已经完成了基础本地化设置，只需要定期同步上游更新。
++
++### 步骤概览
++
++```
++每日/每周检查 → 发现更新 → 生成补丁 → 同步上游 → 应用补丁 → 测试验证
++```
++
++### 详细步骤
++
++#### 1. 检查更新（每日或每周）
++
++```bash
++cd localization/
++
++# 快速检查是否有更新
++./sync-upstream.sh --check-only
++
++# 预期输出：
++# [INFO] 检查上游更新...
++# [INFO] 当前提交: 544e8c2 feat: add AI-powered commit message generation
++# [INFO] 上游提交: 544e8c2 feat: add AI-powered commit message generation
++# [INFO] 已是最新，无需同步
++```
++
++**如果无更新**：
++- 退出，工作完成 ✅
++
++**如果有更新**：
++- 继续步骤 2
++
++---
++
++#### 2. 生成当前补丁
++
++```bash
++# 生成最新的本地化补丁
++./generate-patch.sh
++
++# 预期输出：
++# [INFO] 检测到以下文件更改:
++# [INFO]   - Sources/CodMate/Views/ContentView.swift
++# [INFO]   - Sources/CodMate/Views/SettingsView.swift
++# [INFO] 补丁已生成: patches/manual-patch-20251103-143000-main.patch
++# [INFO] 补丁大小: 15KB
++```
++
++**检查补丁**：
++```bash
++# 查看补丁摘要
++cat patches/manual-patch-20251103-143000-main.patch.summary
++```
++
++---
++
++#### 3. 同步上游
++
++```bash
++# 标准同步（推荐）
++./sync-upstream.sh
++
++# 预期输出：
++# [INFO] 检测到上游有更新
++# [INFO] 上游同步完成
++# [INFO] 应用本地化补丁: patches/manual-patch-20251103-143000-main.patch
++# [INFO] 补丁应用成功
++# [INFO] 同步完成！
++```
++
++---
++
++#### 4. 处理冲突（如果有）
++
++```bash
++# 如果同步失败，会显示：
++# [ERROR] 检测到冲突，无法应用补丁
++# [INFO] 请先解决冲突，或使用 --force 选项
++
++# 检查冲突详情
++./check-conflicts.sh --detailed
++
++# 手动解决冲突：
++# 1. 打开冲突的文件
++# 2. 找到 <<<<<<< ======= >>>>>>> 标记
++# 3. 手动编辑，保留你的修改
++# 4. 标记为已解决
++git add <冲突文件>
++
++# 5. 继续同步
++./sync-upstream.sh --force
++```
++
++---
++
++#### 5. 验证结果
++
++```bash
++# 检查工作目录
++git status
++
++# 查看提交历史
++git log --oneline -5
++
++# 运行应用测试
++# ... 运行 CodMate 应用 ...
++
++# 如果一切正常，推送到你的 fork
++git push origin main
++```
++
++---
++
++## 初次设置流程
++
++**适用场景**: 你第一次设置本地化环境，或者需要重新设置。
++
++### 步骤概览
++
++```
++设置环境 → 创建本地化修改 → 首次生成补丁 → 首次同步 → 验证
++```
++
++### 详细步骤
++
++#### 1. 检查环境
++
++```bash
++# 确保你的 fork 是最新的
++git status
++
++# 检查远程仓库
++git remote -v
++# 应该看到：
++# origin  git@github.com:cat-xierluo/CodMate.git (fetch)
++# origin  git@github.com:cat-xierluo/CodMate.git (push)
++# upstream        https://github.com/loocor/codmate (fetch)
++# upstream        https://github.com/loocor/codmate (push)
++
++# 如果没有 upstream，添加它
++git remote add upstream https://github.com/loocor/codmate
++git fetch upstream
++```
++
++---
++
++#### 2. 使脚本可执行
++
++```bash
++cd localization/
++chmod +x scripts/*.sh
++ls -la scripts/
++# 应该看到：
++# -rwxr-xr-x  1 user  staff  脚本大小  日期  sync-upstream.sh
++# -rwxr-xr-x  1 user  staff  脚本大小  日期  generate-patch.sh
++# -rwxr-xr-x  1 user  staff  脚本大小  日期  check-conflicts.sh
++```
++
++---
++
++#### 3. 创建本地化修改
++
++```bash
++# 编辑 Swift 文件，添加本地化代码
++# 例如：修改 ContentView.swift
++open Sources/CodMate/Views/ContentView.swift
++
++# 将：
++# Text("Settings")
++# 改为：
++# Text("settings.title")
++
++# 添加翻译到 zh-Hans/Localizable.strings
++open zh-Hans/Localizable.strings
++# 添加：
++# "settings.title" = "设置";
++```
++
++---
++
++#### 4. 首次生成补丁
++
++```bash
++# 生成补丁
++./generate-patch.sh --all
++
++# 查看生成的补丁
++ls -lh patches/
++# 应该看到类似：
++# -rw-r--r--  1 user  staff  15KB  11月  3 14:30 manual-patch-20251103-143000-main.patch
++```
++
++---
++
++#### 5. 测试补丁
++
++```bash
++# 检查补丁是否能正确应用
++./check-conflicts.sh --detailed
++
++# 预期输出：
++# [INFO] 验证补丁: patches/manual-patch-20251103-143000-main.patch
++# [INFO] 补丁验证通过
++
++# 如果验证失败，修复问题后重新生成
++```
++
++---
++
++#### 6. 首次同步
++
++```bash
++# 试运行
++./sync-upstream.sh --dry-run
++
++# 实际同步
++./sync-upstream.sh
++
++# 预期输出：
++# [INFO] 创建备份分支: localization-backup-20251103-143000
++# [INFO] 同步上游代码...
++# [INFO] 应用本地化补丁...
++# [INFO] 补丁应用成功
++```
++
++---
++
++#### 7. 提交并推送
++
++```bash
++# 查看更改
++git status
++git diff --stat
++
++# 提交
++git add .
++git commit -m "feat: add Chinese localization for ContentView and SettingsView"
++
++# 推送到你的 fork
++git push origin main
++```
++
++---
++
++## 增量更新流程
++
++**适用场景**: 你有多个本地化修改会话，需要分批次应用。
++
++### 步骤概览
++
++```
++创建多个补丁 → 批量应用 → 统一提交 → 推送
++```
++
++### 详细步骤
++
++#### 1. 创建第一批补丁
++
++```bash
++# 修改 ContentView.swift
++# ...
++git add Sources/CodMate/Views/ContentView.swift zh-Hans/Localizable.strings
++git commit -m "localize: ContentView main interface"
++./generate-patch.sh --since HEAD~1 --output patches/batch1-contentview.patch
++```
++
++---
++
++#### 2. 创建第二批补丁
++
++```bash
++# 修改 SettingsView.swift
++# ...
++git add Sources/CodMate/Views/SettingsView.swift
++git commit -m "localize: SettingsView"
++./generate-patch.sh --since HEAD~1 --output patches/batch2-settings.patch
++```
++
++---
++
++#### 3. 批量应用
++
++```bash
++# 应用所有补丁
++git apply patches/batch1-contentview.patch
++git apply patches/batch2-settings.patch
++
++# 检查结果
++git status
++```
++
++---
++
++#### 4. 统一提交
++
++```bash
++git add .
++git commit -m "feat: complete Chinese localization for ContentView and SettingsView"
++git push origin main
++```
++
++---
++
++## 紧急回滚流程
++
++**适用场景**: 同步后出现严重问题，需要立即回滚。
++
++### 步骤概览
++
++```
++发现问题 → 识别问题 → 回滚 → 修复 → 重新同步
++```
++
++### 详细步骤
++
++#### 1. 识别问题
++
++```bash
++# 应用同步后出现问题
++# 例如：编译错误、运行时崩溃等
++
++# 检查最近的提交
++git log --oneline -5
++
++# 查看具体修改
++git show HEAD --stat
++```
++
++---
++
++#### 2. 快速回滚
++
++```bash
++# 回滚到上一个提交（保留修改为未提交状态）
++git reset --soft HEAD~1
++
++# 或者完全回滚（丢弃修改）
++git reset --hard HEAD~1
++
++# 如果需要回滚到更早的提交
++git log --oneline
++git reset --hard <commit-hash>
++```
++
++---
++
++#### 3. 从备份分支恢复
++
++```bash
++# 查看备份分支
++git branch -a | grep backup
++
++# 切换到备份分支
++git checkout localization-backup-20251103-143000
++
++# 创建新的工作分支
++git checkout -b recovery-branch
++```
++
++---
++
++#### 4. 修复问题
++
++```bash
++# 分析问题原因
++# ...
++# 修复代码
++# ...
++
++# 测试修复
++# 编译并运行应用
++```
++
++---
++
++#### 5. 重新生成补丁
++
++```bash
++# 生成修复后的补丁
++./generate-patch.sh --all
++
++# 重新同步
++./sync-upstream.sh --dry-run
++./sync-upstream.sh
++```
++
++---
++
++## 团队协作流程
++
++**适用场景**: 多个人协作维护本地化，或需要从其他成员获取修改。
++
++### 步骤概览
++
++```
++获取共享补丁 → 应用补丁 → 测试 → 推送更新
++```
++
++### 详细步骤
++
++#### 1. 获取共享补丁
++
++```bash
++# 从团队成员获取补丁文件
++# 例如：通过邮件、Slack、GitHub 等
++
++# 假设你收到文件：team-localization.patch
++cp ~/Downloads/team-localization.patch patches/team-localization-20251103.patch
++```
++
++---
++
++#### 2. 备份当前状态
++
++```bash
++# 创建备份
++git add .
++git stash push -m "backup-before-team-patch"
++git stash list
++# 记录 stash ID： stash@{0}
++```
++
++---
++
++#### 3. 应用团队补丁
++
++```bash
++# 检查补丁
++./check-conflicts.sh --patch patches/team-localization-20251103.patch
++
++# 应用补丁
++git apply patches/team-localization-20251103.patch
++
++# 检查结果
++git status
++```
++
++---
++
++#### 4. 解决冲突（如果有）
++
++```bash
++# 如果有冲突
++./check-conflicts.sh --detailed --patch patches/team-localization-20251103.patch
++
++# 手动解决冲突
++# ...
++
++git add <已解决的文件>
++```
++
++---
++
++#### 5. 测试验证
++
++```bash
++# 编译应用
++# ...
++# 运行测试
++# ...
++```
++
++---
++
++#### 6. 提交更改
++
++```bash
++git add .
++git commit -m "chore: apply team localization updates"
++git push origin main
++```
++
++---
++
++#### 7. 清理（可选）
++
++```bash
++# 删除备份（如果一切正常）
++git stash drop stash@{0}
++
++# 或者保留备份以防万一
++```
++
++---
++
++## 高级用法
++
++### 自动化日常同步
++
++```bash
++# 创建 cron 任务（每天检查一次）
++# 编辑 crontab
++crontab -e
++
++# 添加行：
++# 0 9 * * 1-7 cd /path/to/CodMate/localization && ./sync-upstream.sh --check-only >> sync.log 2>&1
++
++# 每周日自动同步
++# 0 10 * * 0 cd /path/to/CodMate/localization && ./sync-upstream.sh >> weekly-sync.log 2>&1
++```
++
++---
++
++### 创建别名
++
++```bash
++# 添加到 ~/.bashrc 或 ~/.zshrc
++alias codemate-sync='cd /path/to/CodMate/localization && ./sync-upstream.sh'
++alias codemate-check='cd /path/to/CodMate/localization && ./check-conflicts.sh'
++alias codemate-patch='cd /path/to/CodMate/localization && ./generate-patch.sh'
++
++# 使用别名
++codemate-check  # 检查冲突
++codemate-sync   # 同步
++```
++
++---
++
++### 生成状态报告
++
++```bash
++#!/bin/bash
++# 创建脚本：scripts/generate-status.sh
++cd "$(dirname "$0")/.."
++
++echo "=== CodMate 本地化状态报告 ==="
++echo "生成时间: $(date)"
++echo ""
++
++echo "=== 上游状态 ==="
++git fetch upstream --quiet
++echo "上游最新提交: $(git log --oneline -1 upstream/main)"
++echo "本地当前提交: $(git log --oneline -1 HEAD)"
++echo "分支状态: $(git rev-parse --abbrev-ref HEAD)"
++echo ""
++
++echo "=== 补丁状态 ==="
++echo "补丁总数: $(ls patches/*.patch 2>/dev/null | wc -l)"
++echo "最新补丁: $(ls -t patches/*.patch 2>/dev/null | head -1 | xargs basename)"
++echo ""
++
++echo "=== 本地化文件状态 ==="
++echo "Swift 文件修改: $(git status --short Sources/CodMate | wc -l)"
++echo "字符串文件修改: $(git status --short localization/zh-Hans | wc -l)"
++echo ""
++
++echo "=== 建议操作 ==="
++if [ -n "$(git diff HEAD upstream/main)" ]; then
++    echo "需要同步上游更新"
++else
++    echo "已是最新，无需同步"
++fi
++```
++
++---
++
++## 故障处理速查表
++
++| 问题 | 症状 | 解决方案 |
++|------|------|----------|
++| 脚本无法执行 | Permission denied | `chmod +x scripts/*.sh` |
++| 补丁应用失败 | patch does not apply | 检查冲突，手动解决 |
++| upstream 未配置 | 未配置 upstream 远程仓库 | `git remote add upstream ...` |
++| 工作目录不干净 | cannot pull with uncommitted changes | `git stash` 或提交更改 |
++| 编译错误 | 代码有语法错误 | 回滚到上一个提交 |
++
++---
++
++## 资源链接
++
++- [详细补丁管理指南](PATCH-MANAGEMENT.md)
++- [本地化键名参考](localization-keys.json)
++- [快速开始指南](../快速开始.md)
++
++---
++
++**祝你工作顺利！** 🚀
++
++记住：定期备份、有问题及时回滚、测试后再推送。
+diff --git a/localization/check-conflicts.sh b/localization/check-conflicts.sh
+new file mode 100755
+index 0000000..457c84b
+--- /dev/null
++++ b/localization/check-conflicts.sh
+@@ -0,0 +1,330 @@
++#!/bin/bash
++# CodMate 本地化冲突检查脚本
++# 检查本地化修改与上游更新的冲突
++
++set -e
++
++# 颜色定义
++RED='\033[0;31m'
++GREEN='\033[0;32m'
++YELLOW='\033[1;33m'
++BLUE='\033[0;34m'
++NC='\033[0m'
++
++# 配置
++SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++PATCH_DIR="$SCRIPT_DIR/patches"
++WORK_DIR="/tmp/codemate-conflict-check-$$"
++
++# 日志函数
++log() {
++    local level=$1
++    shift
++    local message="$@"
++    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
++
++    case $level in
++        INFO)
++            echo -e "${GREEN}[INFO]${NC} $message" >&2
++            ;;
++        WARN)
++            echo -e "${YELLOW}[WARN]${NC} $message" >&2
++            ;;
++        ERROR)
++            echo -e "${RED}[ERROR]${NC} $message" >&2
++            ;;
++    esac
++}
++
++# 显示帮助
++show_help() {
++    cat << EOF
++CodMate 冲突检查脚本
++
++用法: $0 [选项]
++
++选项:
++    --patch <文件>     检查指定补丁文件（默认使用最新补丁）
++    --upstream <提交>  指定上游提交（默认使用 upstream/main）
++    --detailed         显示详细冲突信息
++    --save-report      保存报告到文件
++    --help             显示帮助信息
++
++示例:
++    $0                           # 检查与上游的冲突
++    $0 --patch my.patch         # 检查指定补丁
++    $0 --detailed               # 显示详细冲突信息
++    $0 --save-report            # 保存报告到文件
++
++EOF
++}
++
++# 解析参数
++PATCH_FILE=""
++UPSTREAM_REF="upstream/main"
++DETAILED=false
++SAVE_REPORT=false
++REPORT_FILE=""
++
++while [[ $# -gt 0 ]]; do
++    case $1 in
++        --patch)
++            PATCH_FILE="$2"
++            shift 2
++            ;;
++        --upstream)
++            UPSTREAM_REF="$2"
++            shift 2
++            ;;
++        --detailed)
++            DETAILED=true
++            shift
++            ;;
++        --save-report)
++            SAVE_REPORT=true
++            shift
++            ;;
++        --help)
++            show_help
++            exit 0
++            ;;
++        *)
++            log ERROR "未知选项: $1"
++            show_help
++            exit 1
++            ;;
++    esac
++done
++
++# 创建工作空间
++setup_workspace() {
++    mkdir -p "$WORK_DIR"
++}
++
++# 清理
++cleanup() {
++    log DEBUG "清理工作空间..."
++    rm -rf "$WORK_DIR"
++}
++
++# 获取最新补丁
++get_latest_patch() {
++    if [ -n "$PATCH_FILE" ]; then
++        if [ -f "$PATCH_FILE" ]; then
++            echo "$PATCH_FILE"
++            return 0
++        else
++            log ERROR "补丁文件不存在: $PATCH_FILE"
++            exit 1
++        fi
++    fi
++
++    # 查找最新补丁
++    local latest=$(ls -t "$PATCH_DIR"/localization-*.patch 2>/dev/null | head -1)
++
++    if [ -z "$latest" ]; then
++        log ERROR "未找到补丁文件"
++        log INFO "请确保补丁目录中有补丁文件: $PATCH_DIR"
++        exit 1
++    fi
++
++    echo "$latest"
++}
++
++# 模拟应用补丁到上游
++simulate_apply() {
++    local patch_file="$1"
++    local upstream_commit="$2"
++
++    log INFO "模拟应用补丁到: $upstream_commit"
++
++    # 保存当前状态
++    git stash push -q -m "conflict-check-stash-$(date +%s)" &>/dev/null
++
++    # 切换到上游
++    git checkout -q "$upstream_commit" &>/dev/null
++
++    # 尝试应用补丁
++    local apply_result
++    if apply_result=$(git apply "$patch_file" 2>&1); then
++        # 应用成功
++        log INFO "补丁应用成功，无冲突"
++        git checkout -q - &>/dev/null  # 恢复原分支
++        git stash pop -q &>/dev/null   # 恢复暂存
++        return 0
++    else
++        # 应用失败，可能有冲突
++        log WARN "补丁应用失败，检测到冲突"
++
++        # 切换回原分支
++        git checkout -q - &>/dev/null
++        git stash pop -q &>/dev/null
++
++        # 尝试获取冲突信息
++        echo "$apply_result"
++        return 1
++    fi
++}
++
++# 检查具体冲突
++check_detailed_conflicts() {
++    local patch_file="$1"
++
++    log INFO "详细冲突检查..."
++
++    # 分析补丁中的更改
++    log INFO "补丁文件: $patch_file"
++    log INFO "补丁大小: $(du -h "$patch_file" | cut -f1)"
++
++    # 提取补丁中的文件列表
++    log INFO "补丁中的文件:"
++    git apply --numstat "$patch_file" | while IFS=$'\t' read -r add del file; do
++        log INFO "  - $file (+$add, -$del)"
++    done
++
++    # 检查每个文件
++    git apply --numstat "$patch_file" | while IFS=$'\t' read -r add del file; do
++        if [ -f "$file" ]; then
++            log DEBUG "检查文件: $file"
++
++            # 检查文件是否在上游也存在
++            if git show "upstream/main:$file" &>/dev/null; then
++                log DEBUG "  文件在上游存在"
++
++                # 检查行号冲突
++                if git diff "upstream/main" -- "$file" | grep -q "^@@"; then
++                    log WARN "  $file: 上游也有修改，可能产生冲突"
++                fi
++            else
++                log DEBUG "  $file: 是新文件，无冲突"
++            fi
++        else
++            log DEBUG "  $file: 将被删除"
++        fi
++    done
++}
++
++# 生成冲突报告
++generate_report() {
++    local patch_file="$1"
++    local has_conflicts="$2"
++    local output_file="$3"
++
++    cat > "$output_file" << EOF
++CodMate 本地化冲突检查报告
++============================
++
++生成时间: $(date '+%Y-%m-%d %H:%M:%S')
++补丁文件: $patch_file
++上游引用: $UPSTREAM_REF
++
++检查结果:
++EOF
++
++    if [ "$has_conflicts" = "false" ]; then
++        cat >> "$output_file" << EOF
++状态: ✅ 无冲突
++
++补丁可以安全应用。
++EOF
++    else
++        cat >> "$output_file" << EOF
++状态: ⚠️  可能存在冲突
++
++建议操作:
++1. 仔细检查冲突区域
++2. 手动解决冲突
++3. 重新生成补丁
++
++详细信息请查看上方输出。
++EOF
++    fi
++
++    cat >> "$output_file" << EOF
++
++补丁统计:
++$(git apply --numstat "$patch_file" 2>/dev/null | while IFS=$'\t' read -r add del file; do echo "  - $file (+$add, -$del)"; done)
++
++---
++报告生成完成。
++EOF
++
++    log INFO "报告已保存到: $output_file"
++}
++
++# 主函数
++main() {
++    log INFO "========================================="
++    log INFO "CodMate 冲突检查脚本"
++    log INFO "========================================="
++
++    # 设置工作空间
++    setup_workspace
++
++    # 获取补丁文件
++    PATCH_FILE=$(get_latest_patch)
++    log INFO "使用补丁: $PATCH_FILE"
++
++    # 获取上游提交
++    log INFO "上游引用: $UPSTREAM_REF"
++
++    # 检查上游远程是否配置
++    if [[ "$UPSTREAM_REF" == upstream/* ]]; then
++        if ! git remote get-url upstream &>/dev/null; then
++            log ERROR "未配置 upstream 远程仓库"
++            exit 1
++        fi
++        git fetch upstream -q &>/dev/null || true
++    fi
++
++    # 执行冲突检查
++    log INFO "开始冲突检查..."
++    echo
++
++    if simulate_apply "$PATCH_FILE" "$UPSTREAM_REF"; then
++        # 无冲突
++        log INFO ""
++        log INFO "========================================="
++        log INFO "检查完成: ✅ 无冲突"
++        log INFO "========================================="
++
++        if [ "$DETAILED" = true ]; then
++            check_detailed_conflicts "$PATCH_FILE"
++        fi
++
++        if [ "$SAVE_REPORT" = true ]; then
++            REPORT_FILE="$SCRIPT_DIR/conflict-check-report-$(date +%Y%m%d-%H%M%S).txt"
++            generate_report "$PATCH_FILE" "false" "$REPORT_FILE"
++        fi
++    else
++        # 有冲突
++        log INFO ""
++        log INFO "========================================="
++        log INFO "检查完成: ⚠️  检测到冲突"
++        log INFO "========================================="
++
++        if [ "$DETAILED" = true ]; then
++            check_detailed_conflicts "$PATCH_FILE"
++        fi
++
++        if [ "$SAVE_REPORT" = true ]; then
++            REPORT_FILE="$SCRIPT_DIR/conflict-check-report-$(date +%Y%m%d-%H%M%S).txt"
++            generate_report "$PATCH_FILE" "true" "$REPORT_FILE"
++        fi
++
++        log INFO ""
++        log INFO "解决冲突的步骤:"
++        log INFO "1. 手动应用补丁: git apply $PATCH_FILE"
++        log INFO "2. 编辑冲突文件，标记为已解决"
++        log INFO "3. 提交更改: git add . && git commit"
++        log INFO "4. 重新生成补丁: ./generate-patch.sh"
++    fi
++
++    cleanup
++}
++
++# 捕获退出信号
++trap cleanup EXIT
++
++# 运行主函数
++main "$@"
+diff --git a/localization/generate-patch.sh b/localization/generate-patch.sh
+new file mode 100755
+index 0000000..2593cdb
+--- /dev/null
++++ b/localization/generate-patch.sh
+@@ -0,0 +1,285 @@
++#!/bin/bash
++# CodMate 补丁生成脚本
++# 自动检测本地化相关更改并生成补丁
++
++set -e
++
++# 颜色定义
++RED='\033[0;31m'
++GREEN='\033[0;32m'
++YELLOW='\033[1;33m'
++BLUE='\033[0;34m'
++NC='\033[0m'
++
++# 配置
++SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++PATCH_DIR="$SCRIPT_DIR/patches"
++WORK_DIR="/tmp/codemate-patch-$$"
++
++# 日志函数
++log() {
++    local level=$1
++    shift
++    local message="$@"
++    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
++
++    case $level in
++        INFO)
++            echo -e "${GREEN}[INFO]${NC} $message" >&2
++            ;;
++        WARN)
++            echo -e "${YELLOW}[WARN]${NC} $message" >&2
++            ;;
++        ERROR)
++            echo -e "${RED}[ERROR]${NC} $message" >&2
++            ;;
++    esac
++}
++
++# 显示帮助
++show_help() {
++    cat << EOF
++CodMate 补丁生成脚本
++
++用法: $0 [选项]
++
++选项:
++    --output <文件>    指定补丁输出文件
++    --since <提交>     从指定提交开始生成补丁
++    --all             包含所有更改（默认只包含本地化相关）
++    --verify          验证生成的补丁
++    --help            显示帮助信息
++
++示例:
++    $0                           # 生成当前更改的补丁
++    $0 --output my-changes.patch # 指定输出文件
++    $0 --since HEAD~5            # 从过去5个提交开始
++
++EOF
++}
++
++# 解析参数
++OUTPUT_FILE=""
++SINCE_REF=""
++INCLUDE_ALL=false
++VERIFY_ONLY=false
++
++while [[ $# -gt 0 ]]; do
++    case $1 in
++        --output)
++            OUTPUT_FILE="$2"
++            shift 2
++            ;;
++        --since)
++            SINCE_REF="$2"
++            shift 2
++            ;;
++        --all)
++            INCLUDE_ALL=true
++            shift
++            ;;
++        --verify)
++            VERIFY_ONLY=true
++            shift
++            ;;
++        --help)
++            show_help
++            exit 0
++            ;;
++        *)
++            log ERROR "未知选项: $1"
++            show_help
++            exit 1
++            ;;
++    esac
++done
++
++# 解析since参数
++if [ -z "$SINCE_REF" ]; then
++    SINCE_REF="HEAD"
++fi
++
++# 创建输出文件名
++generate_output_name() {
++    local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
++    local timestamp=$(date '+%Y%m%d-%H%M%S')
++    echo "$PATCH_DIR/manual-patch-$timestamp-$branch.patch"
++}
++
++# 检查文件是否包含本地化相关更改
++is_localization_change() {
++    local file="$1"
++
++    # 检查文件扩展名
++    if [[ "$file" =~ \.(swift|strings|stringsdict)$ ]]; then
++        return 0
++    fi
++
++    # 检查文件名
++    if [[ "$file" =~ (Localizable|localization) ]]; then
++        return 0
++    fi
++
++    # 检查更改内容
++    if git show "$SINCE_REF" -- "$file" 2>/dev/null | grep -qE "(Text\(|Label\(|Button\(|NSLocalizedString)"; then
++        return 0
++    fi
++
++    return 1
++}
++
++# 获取本地化相关文件列表
++get_localization_files() {
++    git diff --name-only "$SINCE_REF" | while read file; do
++        if is_localization_change "$file"; then
++            echo "$file"
++        fi
++    done
++}
++
++# 生成补丁摘要
++generate_summary() {
++    local patch_file="$1"
++    local change_count=$(git diff --stat "$SINCE_REF" | tail -1)
++
++    cat > "${patch_file}.summary" << EOF
++CodMate 本地化补丁
++
++生成时间: $(date '+%Y-%m-%d %H:%M:%S')
++起始提交: $SINCE_REF
++当前分支: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
++
++更改统计:
++$change_count
++
++包含的文件:
++$(git diff --name-only "$SINCE_REF" | sed 's/^/  - /')
++
++说明:
++此补丁包含 CodMate 项目的中文本地化修改。
++应用此补丁前，请确保已备份当前代码。
++
++EOF
++}
++
++# 验证补丁
++verify_patch() {
++    local patch_file="$1"
++
++    log INFO "验证补丁: $patch_file"
++
++    # 检查补丁格式
++    if ! git apply --check "$patch_file" 2>/dev/null; then
++        log ERROR "补丁格式无效"
++        return 1
++    fi
++
++    # 检查冲突
++    if git apply "$patch_file" 2>&1 | grep -q "conflict"; then
++        log WARN "补丁可能产生冲突"
++        return 1
++    fi
++
++    # 恢复（因为这是验证）
++    git checkout . &>/dev/null
++
++    log INFO "补丁验证通过"
++    return 0
++}
++
++# 主函数
++main() {
++    log INFO "========================================="
++    log INFO "CodMate 补丁生成脚本"
++    log INFO "========================================="
++
++    # 创建目录
++    mkdir -p "$PATCH_DIR"
++
++    # 确定输出文件
++    if [ -z "$OUTPUT_FILE" ]; then
++        OUTPUT_FILE=$(generate_output_name)
++    fi
++
++    log INFO "输出文件: $OUTPUT_FILE"
++    log INFO "起始提交: $SINCE_REF"
++
++    # 获取更改的文件列表
++    local changed_files=$(git diff --name-only "$SINCE_REF")
++
++    if [ -z "$changed_files" ]; then
++        log WARN "没有检测到任何更改"
++        exit 0
++    fi
++
++    log INFO "检测到以下文件更改:"
++
++    # 筛选本地化相关文件
++    local localized_files=()
++    while IFS= read -r file; do
++        if [ -n "$file" ]; then
++            log INFO "  - $file"
++            localized_files+=("$file")
++        fi
++    done < <(get_localization_files)
++
++    if [ ${#localized_files[@]} -eq 0 ]; then
++        log WARN "没有检测到本地化相关更改"
++        if [ "$INCLUDE_ALL" = true ]; then
++            log INFO "包含所有更改..."
++        else
++            log INFO "使用 --all 选项可以包含所有更改"
++            exit 0
++        fi
++    fi
++
++    # 生成补丁
++    log INFO "生成补丁中..."
++
++    if [ "$INCLUDE_ALL" = true ]; then
++        git diff "$SINCE_REF" > "$OUTPUT_FILE"
++    else
++        # 只包含本地化相关文件
++        git diff "$SINCE_REF" -- "${localized_files[@]}" > "$OUTPUT_FILE"
++    fi
++
++    # 检查补丁大小
++    if [ ! -s "$OUTPUT_FILE" ]; then
++        log WARN "生成的补丁为空"
++        rm -f "$OUTPUT_FILE"
++        exit 0
++    fi
++
++    local patch_size=$(du -h "$OUTPUT_FILE" | cut -f1)
++    log INFO "补丁已生成: $OUTPUT_FILE"
++    log INFO "补丁大小: $patch_size"
++
++    # 生成摘要
++    generate_summary "$OUTPUT_FILE"
++    log INFO "补丁摘要: ${OUTPUT_FILE}.summary"
++
++    # 显示补丁统计
++    echo
++    log INFO "补丁统计:"
++    git diff --stat "$SINCE_REF" | while read line; do
++        log INFO "  $line"
++    done
++
++    # 验证补丁
++    if [ "$VERIFY_ONLY" = true ]; then
++        verify_patch "$OUTPUT_FILE"
++    fi
++
++    echo
++    log INFO "========================================="
++    log INFO "补丁生成完成！"
++    log INFO "========================================="
++    log INFO ""
++    log INFO "下一步:"
++    log INFO "1. 审核补丁: $OUTPUT_FILE"
++    log INFO "2. 测试应用: git apply $OUTPUT_FILE"
++    log INFO "3. 如需同步，请运行: ./sync-upstream.sh"
++    log INFO ""
++}
++
++main "$@"
+diff --git a/localization/localization-keys.json b/localization/localization-keys.json
+new file mode 100644
+index 0000000..f6f57d4
+--- /dev/null
++++ b/localization/localization-keys.json
+@@ -0,0 +1,354 @@
++{
++  "version": "1.0",
++  "description": "CodMate 本地化键名映射表，用于管理所有翻译键的一致性",
++  "categories": {
++    "actions": {
++      "description": "动作相关键名",
++      "keys": {
++        "ok": "actions.ok",
++        "cancel": "actions.cancel",
++        "save": "actions.save",
++        "delete": "actions.delete",
++        "edit": "actions.edit",
++        "refresh": "actions.refresh",
++        "resume": "actions.resume",
++        "new": "actions.new",
++        "newWithContext": "actions.newWithContext",
++        "openInTerminal": "actions.openInTerminal",
++        "openInIterm2": "actions.openInIterm2",
++        "openInWarp": "actions.openInWarp",
++        "revealInFinder": "actions.revealInFinder",
++        "exportMarkdown": "actions.exportMarkdown",
++        "change": "actions.change",
++        "restoreDefaults": "actions.restoreDefaults",
++        "view": "actions.view",
++        "test": "actions.test",
++        "import": "actions.import",
++        "close": "actions.close",
++        "stop": "actions.stop"
++      }
++    },
++    "dialogs": {
++      "description": "对话框相关键名",
++      "keys": {
++        "deleteSession": {
++          "title": "dialogs.deleteSession.title",
++          "message": "dialogs.deleteSession.message"
++        },
++        "stopSession": {
++          "title": "dialogs.stopSession.title",
++          "message": "dialogs.stopSession.message"
++        },
++        "deletePrompt": {
++          "title": "dialogs.deletePrompt.title",
++          "message": "dialogs.deletePrompt.message"
++        },
++        "deleteProvider": {
++          "title": "dialogs.deleteProvider.title",
++          "message": "dialogs.deleteProvider.message"
++        },
++        "discardChanges": {
++          "title": "dialogs.discardChanges.title",
++          "message": "dialogs.discardChanges.message"
++        }
++      }
++    },
++    "settings": {
++      "description": "设置相关键名",
++      "keys": {
++        "title": "settings.title",
++        "general": {
++          "title": "settings.general.title",
++          "description": "settings.general.description"
++        },
++        "terminal": {
++          "title": "settings.terminal.title",
++          "description": "settings.terminal.description"
++        },
++        "commandOptions": {
++          "title": "settings.commandOptions.title",
++          "description": "settings.commandOptions.description"
++        },
++        "codex": {
++          "title": "settings.codex.title",
++          "description": "settings.codex.description"
++        },
++        "providers": {
++          "title": "settings.providers.title",
++          "description": "settings.providers.description"
++        },
++        "mcpServers": {
++          "title": "settings.mcpServers.title",
++          "description": "settings.mcpServers.description"
++        },
++        "filePaths": {
++          "title": "settings.filePaths.title"
++        },
++        "sessionsDirectory": {
++          "label": "settings.sessionsDirectory.label",
++          "description": "settings.sessionsDirectory.description"
++        },
++        "notesDirectory": {
++          "label": "settings.notesDirectory.label",
++          "description": "settings.notesDirectory.description"
++        },
++        "codexCliPath": {
++          "label": "settings.codexCliPath.label",
++          "description": "settings.codexCliPath.description"
++        },
++        "runEmbeddedTerminal": {
++          "label": "settings.runEmbeddedTerminal.label",
++          "description": "settings.runEmbeddedTerminal.description"
++        },
++        "copyCommands": {
++          "label": "settings.copyCommands.label",
++          "description": "settings.copyCommands.description"
++        },
++        "openExternalTerminal": {
++          "label": "settings.openExternalTerminal.label",
++          "description": "settings.openExternalTerminal.description"
++        },
++        "sandboxPolicy": {
++          "label": "settings.sandboxPolicy.label",
++          "description": "settings.sandboxPolicy.description"
++        },
++        "approvalPolicy": {
++          "label": "settings.approvalPolicy.label",
++          "description": "settings.approvalPolicy.description"
++        }
++      }
++    },
++    "labels": {
++      "description": "标签相关键名",
++      "keys": {
++        "projects": "labels.projects",
++        "sessions": "labels.sessions",
++        "conversation": "labels.conversation",
++        "environmentContext": "labels.environmentContext",
++        "taskInstructions": "labels.taskInstructions",
++        "model": "labels.model",
++        "started": "labels.started",
++        "duration": "labels.duration",
++        "workingDirectory": "labels.workingDirectory",
++        "fileSize": "labels.fileSize",
++        "changes": "labels.changes",
++        "models": "labels.models"
++      }
++    },
++    "placeholders": {
++      "description": "占位符相关键名",
++      "keys": {
++        "search": "placeholder.search",
++        "searchTitleComment": "placeholder.searchTitleComment",
++        "searchPrompts": "placeholder.searchPrompts",
++        "filterConversation": "placeholder.filterConversation",
++        "nameOptional": "placeholder.nameOptional",
++        "commentOptional": "placeholder.commentOptional",
++        "providerName": "placeholder.providerName",
++        "codexBaseURL": "placeholder.codexBaseURL",
++        "apiKeyEnv": "placeholder.apiKeyEnv",
++        "vendorModelId": "placeholder.vendorModelId",
++        "pasteJSON": "placeholder.pasteJSON",
++        "dropFilesHere": "placeholder.dropFilesHere"
++      }
++    },
++    "status": {
++      "description": "状态相关键名",
++      "keys": {
++        "loading": "status.loading",
++        "saving": "status.saving",
++        "processing": "status.processing",
++        "updating": "status.updating",
++        "enriching": "status.enriching",
++        "noSessions": "status.noSessions",
++        "noSessionsHint": "status.noSessionsHint",
++        "noProjects": "status.noProjects",
++        "noMessages": "status.noMessages",
++        "noMatches": "status.noMatches",
++        "parsing": "status.parsing",
++        "detectedServers": "status.detectedServers",
++        "showingResults": "status.showingResults"
++      }
++    },
++    "help": {
++      "description": "帮助提示相关键名",
++      "keys": {
++        "refreshSessionIndex": "help.refreshSessionIndex",
++        "rename": "help.rename",
++        "reloadSessionFile": "help.reloadSessionFile",
++        "restoreLayout": "help.restoreLayout",
++        "expandConversation": "help.expandConversation",
++        "selectProjectForNew": "help.selectProjectForNew",
++        "startNewInProject": "help.startNewInProject",
++        "openInFinder": "help.openInFinder",
++        "returnToHistory": "help.returnToHistory"
++      }
++    },
++    "menu": {
++      "description": "菜单相关键名",
++      "keys": {
++        "new": "menu.new",
++        "resume": "menu.resume",
++        "editTitleComment": "menu.editTitleComment",
++        "assignToProject": "menu.assignToProject",
++        "revealInFinder": "menu.revealInFinder",
++        "exportMarkdown": "menu.exportMarkdown",
++        "deleteSession": "menu.deleteSession",
++        "newProject": "menu.newProject"
++      }
++    },
++    "sort": {
++      "description": "排序相关键名",
++      "keys": {
++        "oldestFirst": "sort.oldestFirst",
++        "newestFirst": "sort.newestFirst"
++      }
++    },
++    "columns": {
++      "description": "表格列相关键名",
++      "keys": {
++        "default": "columns.default",
++        "modelId": "columns.modelId",
++        "reasoning": "columns.reasoning",
++        "toolUse": "columns.toolUse",
++        "vision": "columns.vision",
++        "longContext": "columns.longContext"
++      }
++    },
++    "options": {
++      "description": "选项相关键名",
++      "keys": {
++        "chat": "options.chat",
++        "responses": "options.responses",
++        "stdio": "options.stdio",
++        "sse": "options.sse",
++        "streamableHttp": "options.streamableHttp",
++        "diff": "options.diff",
++        "preview": "options.preview"
++      }
++    },
++    "fields": {
++      "description": "表单字段相关键名",
++      "keys": {
++        "name": {
++          "label": "fields.name.label",
++          "description": "fields.name.description"
++        },
++        "codexBaseURL": {
++          "label": "fields.codexBaseURL.label",
++          "description": "fields.codexBaseURL.description"
++        },
++        "claudeBaseURL": {
++          "label": "fields.claudeBaseURL.label",
++          "description": "fields.claudeBaseURL.description"
++        },
++        "apiKeyEnv": {
++          "label": "fields.apiKeyEnv.label",
++          "description": "fields.apiKeyEnv.description"
++        },
++        "wireAPI": {
++          "label": "fields.wireAPI.label",
++          "description": "fields.wireAPI.description"
++        },
++        "url": "fields.url",
++        "command": "fields.command",
++        "args": "fields.args",
++        "env": "fields.env",
++        "headers": "fields.headers"
++      }
++    },
++    "providers": {
++      "description": "提供商相关键名",
++      "keys": {
++        "k2": "providers.k2",
++        "glm": "providers.glm",
++        "deepseek": "providers.deepseek",
++        "other": "providers.other",
++        "activeProvider": "providers.activeProvider"
++      }
++    },
++    "sessionInfo": {
++      "description": "会话信息相关键名",
++      "keys": {
++        "started": "sessionInfo.started",
++        "duration": "sessionInfo.duration",
++        "model": "sessionInfo.model",
++        "approval": "sessionInfo.approval",
++        "cliVersion": "sessionInfo.cliVersion",
++        "originator": "sessionInfo.originator",
++        "workingDirectory": "sessionInfo.workingDirectory",
++        "fileSize": "sessionInfo.fileSize"
++      }
++    },
++    "title": {
++      "description": "标题相关键名",
++      "keys": {
++        "settings": "title.settings",
++        "newProvider": "title.newProvider",
++        "editProvider": "title.editProvider",
++        "newMCPServer": "title.newMCPServer",
++        "mcpmate": "title.mcpmate",
++        "presetCommands": "title.presetCommands",
++        "editSession": "title.editSession"
++      }
++    },
++    "about": {
++      "description": "关于页面相关键名",
++      "keys": {
++        "title": "about.title",
++        "description": "about.description",
++        "version": "about.version",
++        "buildTimestamp": "about.buildTimestamp",
++        "latestRelease": "about.latestRelease",
++        "projectURL": "about.projectURL",
++        "repository": "about.repository",
++        "licenses": "about.licenses"
++      }
++    },
++    "tooltip": {
++      "description": "工具提示相关键名",
++      "keys": {
++        "delete": "tooltip.delete",
++        "edit": "tooltip.edit",
++        "refresh": "tooltip.refresh",
++        "openInTerminal": "tooltip.openInTerminal"
++      }
++    }
++  },
++  "conventions": {
++    "description": "命名约定",
++    "rules": [
++      "使用小写字母和点号分隔层次",
++      "按功能分组：actions.*, dialogs.*, settings.* 等",
++      "复合键名使用 camelCase 或点号分隔",
++      "避免使用缩写，保持语义清晰",
++      "添加注释说明键名用途"
++    ]
++  },
++  "examples": {
++    "description": "使用示例",
++    "code": [
++      "// SwiftUI 中使用",
++      "Text(\"settings.title\")",
++      "Button(\"actions.delete\") { }",
++      "",
++      "// 带参数的字符串",
++      "String(format: NSLocalizedString(\"dialogs.deleteProvider.message\", comment: \"\"), providerName)",
++      "",
++      "// 在 .strings 文件中",
++      "\"settings.title\" = \"设置\";",
++      "\"actions.delete\" = \"删除\";",
++      "\"dialogs.deleteProvider.message\" = \"确定要删除 \\\"%@\\\" 吗？此操作无法撤销。\";"
++    ]
++  },
++  "usage_instructions": {
++    "description": "使用说明",
++    "steps": [
++      "1. 在修改 Swift 文件时，使用键名而非硬编码字符串",
++      "2. 在相应的 .strings 文件中添加翻译",
++      "3. 保持键名的一致性，参考本映射表",
++      "4. 定期更新本映射表以添加新键名",
++      "5. 团队成员共享此文件以保持一致性"
++    ]
++  }
++}
+diff --git a/localization/patch-template.diff b/localization/patch-template.diff
+new file mode 100644
+index 0000000..7e1cf88
+--- /dev/null
++++ b/localization/patch-template.diff
+@@ -0,0 +1,295 @@
++--- a/Sources/CodMate/Views/ContentView.swift
+++++ b/Sources/CodMate/Views/ContentView.swift
++@@ -231,7 +231,7 @@ struct ContentView: View {
++                     Button(role: .cancel) {
++                         confirmStopState = nil
++                     } label: {
++-                        Text("Cancel")
+++                        Text("actions.cancel")
++                     }
++
++                     Button {
++@@ -245,7 +245,7 @@ struct ContentView: View {
++             Alert(
++                 title: Text(state.title),
++                 message: Text(state.message),
++-                dismissButton: .default(Text("OK"))
+++                dismissButton: .default(Text("actions.ok"))
++             )
++         }
++         .alert(
++@@ -249,7 +249,7 @@ struct ContentView: View {
++             Button("Cancel", role: .cancel) {}
++             Button("Move to Trash", role: .destructive) {
++                 deleteSelections(ids: ids)
++-            }
+++            }.keyboardShortcut(.defaultAction)
++         } message: { _ in
++             Text("Session files will be moved to Trash and can be restored in Finder.")
++         }
++@@ -333,7 +333,7 @@ struct ContentView: View {
++             } label: {
++                 if viewModel.isEnriching {
++                     ProgressView()
++                         .progressViewStyle(.circular)
++-                        .controlSize(.small)
+++                        .controlSize(.small)
++                         .frame(width: 16, height: 16)
++                 } else {
++                     Image(systemName: "arrow.clockwise")
++@@ -168,7 +168,7 @@ struct ContentView: View {
++                         .font(.system(size: 16, weight: .medium))
++                 }
++             }
++-            .buttonStyle(.bordered)
+++            .buttonStyle(.bordered)
++             .controlSize(.small)
++             .help("Refresh session index")
++             .disabled(viewModel.isEnriching || viewModel.isLoading)
++@@ -430,7 +430,7 @@ struct ContentView: View {
++
++             // 新建会话入口
++-            Button("New Session", action: startNewSession)
+++            Button("actions.new", action: startNewSession)
++                 .keyboardShortcut(.command, .shift, "N")
++                 .help("Appears in list after first message")
++
++--- a/Sources/CodMate/Views/SettingsView.swift
+++++ b/Sources/CodMate/Views/SettingsView.swift
++@@ -28,7 +28,7 @@ struct SettingsView: View {
++     var body: some View {
++         ZStack(alignment: .topLeading) {
++             // 隐藏的视图用于窗口配置
++-            WindowConfigurator { window in
+++            WindowConfigurator { window in
++                 window.isMovableByWindowBackground = true
++             }
++             .frame(width: 0, height: 0)
++@@ -145,7 +145,7 @@ struct SettingsView: View {
++
++             ScrollView {
++                 VStack(alignment: .leading, spacing: 20) {
++                     VStack(alignment: .leading, spacing: 6) {
++-                        Text("General Settings")
+++                        Text("settings.general.title")
++                             .font(.title2)
++                             .fontWeight(.bold)
++-                        Text("Configure basic application settings and file paths")
+++                        Text("settings.general.description")
++                             .font(.subheadline)
++                             .foregroundColor(.secondary)
++                     }
++@@ -154,7 +154,7 @@ struct SettingsView: View {
++                         .font(.headline)
++                         .foregroundColor(.primary)
++
++-                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
+++                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
++                         GridRow {
++                             VStack(alignment: .leading, spacing: 4) {
++                                 Label("Sessions Directory", systemImage: "folder")
++@@ -513,7 +513,7 @@ struct SettingsView: View {
++         VStack(alignment: .leading, spacing: 12) {
++             VStack(alignment: .leading, spacing: 6) {
++-                Text("About CodMate")
+++                Text("about.title")
++                     .font(.title2)
++                     .fontWeight(.bold)
++-                Text("Build information and project links")
+++                Text("about.description")
++                     .font(.subheadline)
++                     .foregroundColor(.secondary)
++             }
++@@ -521,12 +521,12 @@ struct SettingsView: View {
++             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
++                 GridRow {
++-                    Text("Version")
+++                    Text("about.version")
++                         .font(.subheadline)
++                         .fontWeight(.medium)
++                         .foregroundColor(.primary)
++-                    Text("about.version")
+++                    Text("about.version.value")
++                         .lineLimit(1)
++                         .truncationMode(.middle)
++                         .frame(maxWidth: .infinity, alignment: .trailing)
++@@ -534,12 +534,12 @@ struct SettingsView: View {
++
++                 GridRow {
++-                    Text("Build Timestamp")
+++                    Text("about.buildTimestamp")
++                         .font(.subheadline)
++                         .fontWeight(.medium)
++                         .foregroundColor(.primary)
++-                    Text("about.buildTimestamp")
+++                    Text("about.buildTimestamp.value")
++                         .lineLimit(1)
++                         .truncationMode(.middle)
++                         .frame(maxWidth: .infinity, alignment: .trailing)
++@@ -547,12 +547,12 @@ struct SettingsView: View {
++
++                 GridRow {
++-                    Text("Latest Release")
+++                    Text("about.latestRelease")
++                         .font(.subheadline)
++                         .fontWeight(.medium)
++                         .foregroundColor(.primary)
++-                    Text("about.latestRelease")
+++                    Text("about.latestRelease.value")
++                         .lineLimit(1)
++                         .truncationMode(.middle)
++                         .frame(maxWidth: .infinity, alignment: .trailing)
++@@ -560,12 +560,12 @@ struct SettingsView: View {
++
++                 GridRow {
++-                    Text("Project URL")
+++                    Text("about.projectURL")
++                         .font(.subheadline)
++                         .fontWeight(.medium)
++                         .foregroundColor(.primary)
++-                    Text("about.projectURL")
+++                    Text("about.projectURL.value")
++                         .lineLimit(1)
++                         .truncationMode(.middle)
++                         .frame(maxWidth: .infinity, alignment: .trailing)
++@@ -573,12 +573,12 @@ struct SettingsView: View {
++
++                 GridRow {
++-                    Text("Repository")
+++                    Text("about.repository")
++                         .font(.subheadline)
++                         .fontWeight(.medium)
++                         .foregroundColor(.primary)
++-                    Text("about.repository")
+++                    Text("about.repository.value")
++                         .lineLimit(1)
++                         .truncationMode(.middle)
++                         .frame(maxWidth: .infinity, alignment: .trailing)
++@@ -586,12 +586,12 @@ struct SettingsView: View {
++
++                 GridRow {
++-                    Text("Open Source Licenses")
+++                    Text("about.licenses")
++                         .font(.subheadline)
++                         .fontWeight(.medium)
++                         .foregroundColor(.primary)
++-                    Button("View…") {
+++                    Button("actions.view") {
++                         showLicensesSheet = true
++                     }
++                     .buttonStyle(.borderless)
++@@ -604,7 +604,7 @@ struct SettingsView: View {
++
++     private var placeholder: some View {
++         ContentUnavailableView(
++-            "Select a session", systemImage: "rectangle.and.text.magnifyingglass",
++-            description: Text("Pick a session from the middle list to view details.")
+++            "placeholder.selectSession", systemImage: "rectangle.and.text.magnifyingglass",
+++            description: Text("placeholder.pickSessionDetails")
++         )
++         .frame(maxWidth: .infinity, maxHeight: .infinity)
++     }
++--- a/localization/zh-Hans/Localizable.strings
+++++ b/localization/zh-Hans/Localizable.strings
++@@ -1,6 +1,26 @@
++ /* ContentView 相关字符串 */
++
+++/* 基础操作 */
+++"actions.ok" = "确定";
+++"actions.cancel" = "取消";
+++"actions.save" = "保存";
+++"actions.delete" = "删除";
+++"actions.refresh" = "刷新";
+++"actions.new" = "新建";
+++"actions.view" = "查看";
+++"actions.change" = "更改";
+++"actions.restoreDefaults" = "恢复默认";
+++
+++/* 状态提示 */
+++"status.loading" = "加载中";
+++"status.saving" = "保存中";
+++"status.processing" = "处理中";
+++
+++/* 占位符 */
+++"placeholder.selectSession" = "选择一个会话";
+++"placeholder.pickSessionDetails" = "从中间列表选择一个会话以查看详情";
+++
++ /* 主界面 */
++ "Select a session" = "选择一个会话";
++ "Pick a session from the middle list to view details" = "从中间列表选择一个会话以查看详情";
++
++@@ -10,6 +30,8 @@
++
++ /* 工具提示 */
++ "Refresh session index" = "刷新会话索引";
+++"help.refreshSessionIndex" = "刷新会话索引";
+++"help.rename" = "重命名/添加评论";
++
++ /* 设置页面 */
++ "Settings" = "设置";
++ "General Settings" = "通用设置";
++ "General Settings" = "通用设置";
++ "Terminal Settings" = "终端设置";
++ "Command Settings" = "命令设置";
++ "Codex Settings" = "Codex 设置";
++@@ -60,3 +62,56 @@
++ /* 错误消息 */
++ "Failed to choose directory" = "选择目录失败";
++ "Failed to choose CLI" = "选择 CLI 失败";
+++
+++/* 关于页面 */
+++"about.title" = "关于 CodMate";
+++"about.description" = "构建信息和项目链接";
+++"about.version" = "版本";
+++"about.version.value" = "1.0.0";
+++"about.buildTimestamp" = "构建时间戳";
+++"about.buildTimestamp.value" = "2025-11-03";
+++"about.latestRelease" = "最新版本";
+++"about.latestRelease.value" = "v0.1.8";
+++"about.projectURL" = "项目网址";
+++"about.projectURL.value" = "https://github.com/cat-xierluo/CodMate";
+++"about.repository" = "代码仓库";
+++"about.repository.value" = "https://github.com/loocor/codmate";
+++"about.licenses" = "开源许可证";
+++
+++/* 帮助提示 */
+++"help.rename" = "重命名/添加评论";
+++"help.refreshSessionIndex" = "刷新会话索引";
+++
+++/* 标签 */
+++"labels.projects" = "项目";
+++"labels.sessions" = "会话";
+++"labels.conversation" = "对话";
+++"labels.environmentContext" = "环境上下文";
+++"labels.taskInstructions" = "任务指令";
+++"labels.model" = "模型";
+++"labels.started" = "开始时间";
+++"labels.duration" = "持续时间";
+++"labels.workingDirectory" = "工作目录";
+++"labels.fileSize" = "文件大小";
+++"labels.changes" = "更改";
+++"labels.models" = "模型";
+++
+++/* 会话信息 */
+++"sessionInfo.started" = "开始";
+++"sessionInfo.duration" = "持续时间";
+++"sessionInfo.model" = "模型";
+++"sessionInfo.approval" = "审批";
+++"sessionInfo.cliVersion" = "CLI 版本";
+++"sessionInfo.originator" = "创建者";
+++"sessionInfo.workingDirectory" = "工作目录";
+++"sessionInfo.fileSize" = "文件大小";
+++
+++/* 状态 */
+++"status.noSessions" = "无会话";
+++"status.noSessionsHint" = "调整目录或启动 Codex CLI 以生成新的会话日志。";
+++"status.noProjects" = "无项目";
+++"status.noMessages" = "无消息";
+++"status.noMatches" = "无匹配项";
+++"status.parsing" = "解析中...";
+++"status.detectedServers" = "检测到: %d 个服务器";
+++"status.showingResults" = "显示前 %d 个结果 — 优化搜索以查看更多";
+++
+++/* 排序 */
+++"sort.oldestFirst" = "从旧到新";
+++"sort.newestFirst" = "从新到旧";
+diff --git a/localization/sync-upstream.sh b/localization/sync-upstream.sh
+new file mode 100755
+index 0000000..1f5d18d
+--- /dev/null
++++ b/localization/sync-upstream.sh
+@@ -0,0 +1,335 @@
++#!/bin/bash
++# CodMate 本地化同步脚本
++# 用法: ./sync-upstream.sh [选项]
++# 选项:
++#   --dry-run    试运行，不实际应用补丁
++#   --force      强制应用补丁，跳过冲突检查
++#   --help       显示帮助信息
++
++set -e
++
++# 颜色定义
++RED='\033[0;31m'
++GREEN='\033[0;32m'
++YELLOW='\033[1;33m'
++BLUE='\033[0;34m'
++NC='\033[0m' # No Color
++
++# 配置
++LOCALIZATION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++PATCH_DIR="$LOCALIZATION_DIR/patches"
++WORK_DIR="/tmp/codemate-localization-$$"
++
++# 显示帮助信息
++show_help() {
++    cat << EOF
++CodMate 本地化同步脚本
++
++用法: $0 [选项]
++
++选项:
++    --dry-run    试运行，显示将要执行的操作但不实际执行
++    --force      强制应用补丁，跳过冲突检查
++    --check-only 仅检查是否有更新，不同步
++    --help       显示此帮助信息
++
++示例:
++    $0                    # 标准同步
++    $0 --dry-run          # 试运行
++    $0 --force            # 强制同步
++
++更多信息请参考: PATCH-MANAGEMENT.md
++EOF
++}
++
++# 记录日志
++log() {
++    local level=$1
++    shift
++    local message="$@"
++    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
++
++    case $level in
++        INFO)
++            echo -e "${GREEN}[INFO]${NC} $message" >&2
++            ;;
++        WARN)
++            echo -e "${YELLOW}[WARN]${NC} $message" >&2
++            ;;
++        ERROR)
++            echo -e "${RED}[ERROR]${NC} $message" >&2
++            ;;
++        DEBUG)
++            echo -e "${BLUE}[DEBUG]${NC} $message" >&2
++            ;;
++    esac
++}
++
++# 检查依赖
++check_dependencies() {
++    log INFO "检查依赖..."
++
++    # 检查必要的命令
++    local missing=()
++    for cmd in git; do
++        if ! command -v $cmd &> /dev/null; then
++            missing+=($cmd)
++        fi
++    done
++
++    if [ ${#missing[@]} -gt 0 ]; then
++        log ERROR "缺少必要的命令: ${missing[*]}"
++        log INFO "请安装这些命令后重试"
++        exit 1
++    fi
++
++    log INFO "依赖检查通过"
++}
++
++# 解析命令行参数
++DRY_RUN=false
++FORCE=false
++CHECK_ONLY=false
++
++while [[ $# -gt 0 ]]; do
++    case $1 in
++        --dry-run)
++            DRY_RUN=true
++            shift
++            ;;
++        --force)
++            FORCE=true
++            shift
++            ;;
++        --check-only)
++            CHECK_ONLY=true
++            shift
++            ;;
++        --help)
++            show_help
++            exit 0
++            ;;
++        *)
++            log WARN "未知选项: $1"
++            show_help
++            exit 1
++            ;;
++    esac
++done
++
++# 创建工作目录
++setup_workspace() {
++    log INFO "设置工作空间..."
++    mkdir -p "$WORK_DIR"
++    mkdir -p "$PATCH_DIR"
++
++    log DEBUG "工作目录: $WORK_DIR"
++    log DEBUG "补丁目录: $PATCH_DIR"
++}
++
++# 检查是否有上游更新
++check_for_updates() {
++    log INFO "检查上游更新..."
++
++    # 检查是否配置了 upstream 远程
++    if ! git remote get-url upstream &> /dev/null; then
++        log ERROR "未配置 upstream 远程仓库"
++        log INFO "请运行: git remote add upstream <上游仓库URL>"
++        exit 1
++    fi
++
++    # 获取上游最新提交
++    git fetch upstream --quiet
++
++    local local_commit=$(git rev-parse HEAD)
++    local upstream_commit=$(git rev-parse upstream/main)
++
++    log DEBUG "本地提交: $local_commit"
++    log DEBUG "上游提交: $upstream_commit"
++
++    if [ "$local_commit" = "$upstream_commit" ]; then
++        log INFO "已是最新版本，无需同步"
++        return 1
++    fi
++
++    log INFO "检测到上游有更新"
++    log INFO "本地: $(git log --oneline -1 $local_commit)"
++    log INFO "上游: $(git log --oneline -1 $upstream_commit)"
++
++    return 0
++}
++
++# 生成补丁
++generate_patch() {
++    log INFO "生成本地化补丁..."
++
++    # 获取当前分支名
++    local branch=$(git rev-parse --abbrev-ref HEAD)
++
++    # 生成补丁文件名（包含日期时间）
++    local timestamp=$(date '+%Y%m%d-%H%M%S')
++    local patch_file="$PATCH_DIR/localization-$timestamp-$branch.patch"
++
++    # 生成补丁
++    log DEBUG "生成补丁文件: $patch_file"
++    git diff HEAD > "$patch_file"
++
++    if [ ! -s "$patch_file" ]; then
++        log WARN "没有检测到任何更改"
++        rm -f "$patch_file"
++        return 1
++    fi
++
++    log INFO "补丁已生成: $patch_file"
++    log INFO "补丁大小: $(du -h "$patch_file" | cut -f1)"
++
++    # 显示补丁摘要
++    echo
++    log INFO "补丁摘要:"
++    git diff --stat HEAD >> /dev/null
++
++    return 0
++}
++
++# 检查补丁冲突
++check_patch_conflicts() {
++    log INFO "检查补丁冲突..."
++
++    # 模拟应用补丁以检测冲突
++    if git apply --check "$1" 2>/dev/null; then
++        log INFO "补丁检查通过，无冲突"
++        return 0
++    else
++        log WARN "检测到潜在冲突"
++        log INFO "详细信息请运行: $0 --dry-run"
++
++        # 尝试显示冲突信息
++        log INFO "尝试应用补丁以获取详细错误..."
++        git apply "$1" 2>&1 | head -20
++
++        return 1
++    fi
++}
++
++# 同步上游代码
++sync_upstream() {
++    log INFO "同步上游代码..."
++
++    if [ "$DRY_RUN" = true ]; then
++        log INFO "[试运行模式] 将执行以下操作:"
++        log INFO "1. git fetch upstream"
++        log INFO "2. git reset --hard upstream/main"
++        log INFO "3. git apply 最新的本地化补丁"
++        return 0
++    fi
++
++    # 备份当前分支（以防万一）
++    local backup_branch="localization-backup-$(date +%Y%m%d-%H%M%S)"
++    log INFO "创建备份分支: $backup_branch"
++    git checkout -b "$backup_branch" &> /dev/null || true
++    git checkout main &> /dev/null
++
++    # 同步上游
++    log INFO "拉取上游更新..."
++    git fetch upstream --quiet
++    git reset --hard upstream/main --quiet
++
++    log INFO "上游同步完成"
++    log INFO "当前分支: $(git rev-parse --abbrev-ref HEAD)"
++    log INFO "当前提交: $(git log --oneline -1 HEAD)"
++
++    # 应用最新的本地化补丁
++    local latest_patch=$(ls -t "$PATCH_DIR"/localization-*.patch 2>/dev/null | head -1)
++
++    if [ -n "$latest_patch" ]; then
++        log INFO "应用本地化补丁: $(basename "$latest_patch")"
++
++        if [ "$FORCE" = true ]; then
++            # 强制应用
++            if git apply "$latest_patch" 2>/dev/null; then
++                log INFO "补丁应用成功"
++            else
++                log WARN "补丁应用失败，将尝试强制应用..."
++                git apply --whitespace=warn "$latest_patch" 2>&1 || true
++            fi
++        else
++            # 检查冲突
++            if check_patch_conflicts "$latest_patch"; then
++                if git apply "$latest_patch"; then
++                    log INFO "补丁应用成功"
++                else
++                    log ERROR "补丁应用失败"
++                    log INFO "请手动解决冲突，或使用 --force 选项"
++                    exit 1
++                fi
++            else
++                log ERROR "检测到冲突，无法应用补丁"
++                log INFO "请先解决冲突，或使用 --force 选项"
++                exit 1
++            fi
++        fi
++    else
++        log WARN "未找到本地化补丁文件"
++    fi
++}
++
++# 清理
++cleanup() {
++    log DEBUG "清理工作空间..."
++    rm -rf "$WORK_DIR"
++}
++
++# 主函数
++main() {
++    log INFO "========================================="
++    log INFO "CodMate 本地化同步脚本"
++    log INFO "========================================="
++    log INFO ""
++
++    # 如果只是检查更新
++    if [ "$CHECK_ONLY" = true ]; then
++        if check_for_updates; then
++            log INFO "有可用更新"
++            exit 0
++        else
++            log INFO "已是最新"
++            exit 0
++        fi
++    fi
++
++    # 检查是否有更新
++    if ! check_for_updates; then
++        log INFO "无需同步，退出"
++        cleanup
++        exit 0
++    fi
++
++    # 设置工作空间
++    setup_workspace
++
++    # 生成补丁
++    generate_patch
++
++    # 同步上游代码
++    sync_upstream
++
++    # 清理
++    cleanup
++
++    log INFO ""
++    log INFO "========================================="
++    log INFO "同步完成！"
++    log INFO "========================================="
++    log INFO ""
++    log INFO "下一步:"
++    log INFO "1. 运行应用并检查界面"
++    log INFO "2. 如有问题，请检查: PATCH-MANAGEMENT.md"
++    log INFO "3. 查看文档: SYNC-WORKFLOW.md"
++    log INFO ""
++}
++
++# 捕获退出信号
++trap cleanup EXIT
++
++# 运行主函数
++main "$@"
+diff --git a/localization/zh-Hans/Localizable.strings b/localization/zh-Hans/Localizable.strings
+new file mode 100644
+index 0000000..f0f4d50
+--- /dev/null
++++ b/localization/zh-Hans/Localizable.strings
+@@ -0,0 +1,275 @@
++/*
++//  CodMate Chinese Localization
++//  Simplified Chinese (zh-Hans)
++//  Created: 2025-11-03
++*/
++
++/* =======================
++   通用术语 / Common Terms
++   ======================= */
++
++/* 会话 */
++"Session" = "会话";
++
++/* 恢复会话 */
++"Resume" = "继续";
++
++/* 继续执行 */
++"Resume and more options" = "继续执行及更多选项";
++
++/* 项目 */
++"Project" = "项目";
++
++/* 提供者 */
++"Provider" = "提供商";
++
++/* 新建 */
++"New" = "新建";
++
++/* 刷新 */
++"Refresh" = "刷新";
++
++/* 刷新会话索引 */
++"Refresh session index" = "刷新会话索引";
++
++/* 删除 */
++"Delete" = "删除";
++
++/* 移动到废纸篓 */
++"Move to Trash" = "移动到废纸篓";
++
++/* 取消 */
++"Cancel" = "取消";
++
++/* 确定 */
++"OK" = "确定";
++
++/* 保存 */
++"Save" = "保存";
++
++/* 打开 */
++"Open" = "打开";
++
++/* 关闭 */
++"Close" = "关闭";
++
++/* 导出 */
++"Export" = "导出";
++
++/* 导入 */
++"Import" = "导入";
++
++/* 复制 */
++"Copy" = "复制";
++
++/* 粘贴 */
++"Paste" = "粘贴";
++
++/* 编辑 */
++"Edit" = "编辑";
++
++/* 重命名 */
++"Rename" = "重命名";
++
++/* 添加评论 */
++"Add Comment" = "添加评论";
++
++/* 重命名/添加评论 */
++"Rename / Add Comment" = "重命名/添加评论";
++
++/* 筛选器 */
++"Filter" = "筛选";
++
++/* 搜索 */
++"Search" = "搜索";
++
++/* 名称 */
++"Name" = "名称";
++
++/* 目录 */
++"Directory" = "目录";
++
++/* 父项目 */
++"Parent Project" = "父项目";
++
++/* 信任级别 */
++"Trust Level" = "信任级别";
++
++/* 描述 */
++"Description" = "描述";
++
++/* 说明 */
++"Instructions" = "说明";
++
++/* 状态 */
++"Status" = "状态";
++
++/* 成功 */
++"Success" = "成功";
++
++/* 失败 */
++"Failed" = "失败";
++
++/* 错误 */
++"Error" = "错误";
++
++/* 警告 */
++"Warning" = "警告";
++
++/* 提示 */
++"Tip" = "提示";
++
++/* 设置 */
++"Settings" = "设置";
++
++/* 首选项 */
++"Preferences" = "首选项";
++
++/* 通用设置 */
++"General Settings" = "通用设置";
++
++/* 配置基本应用程序设置和文件路径 */
++"Configure basic application settings and file paths" = "配置基本应用程序设置和文件路径";
++
++/* 文件路径 */
++"File Paths" = "文件路径";
++
++/* 终端设置 */
++"Terminal Settings" = "终端设置";
++
++/* 命令设置 */
++"Command Settings" = "命令设置";
++
++/* Codex 设置 */
++"Codex Settings" = "Codex 设置";
++
++/* 关于 */
++"About" = "关于";
++
++/* =======================
++   会话管理 / Session Management
++   ======================= */
++
++/* 选择一个会话以查看详情 */
++"Select a session" = "选择一个会话以查看详情";
++
++/* 从中间列表选择会话查看详情 */
++"Pick a session from the middle list to view details" = "从中间列表选择一个会话以查看详情";
++
++/* 删除选中的会话？ */
++"Delete selected sessions?" = "删除选中的会话？";
++
++/* 会话文件将被移动到废纸篓，可以在 Finder 中恢复 */
++"Session files will be moved to Trash and can be restored in Finder." = "会话文件将被移动到废纸篓，可以在 Finder 中恢复。";
++
++/* 打开为新会话 */
++"New With Context…" = "基于上下文新建…";
++
++/* 开始新的 Codex 会话（在可用时使用项目配置） */
++"Start a new Codex session (use project profile when available)" = "开始新的 Codex 会话（可用时使用项目配置）";
++
++/* 导出 Markdown */
++"Export Markdown" = "导出 Markdown";
++
++/* 在 Finder 中显示 */
++"Reveal in Finder" = "在 Finder 中显示";
++
++/* 在终端中打开 */
++"Open in Terminal" = "在终端中打开";
++
++/* 在 iTerm2 中打开（直接） */
++"Open in iTerm2 (Direct)" = "在 iTerm2 中打开（直接）";
++
++/* 在 Warp 中打开（路径） */
++"Open in Warp (Path)" = "在 Warp 中打开（路径）";
++
++/* 打开嵌入式终端（测试版） */
++"Open Embedded Terminal (Alpha)" = "打开嵌入式终端（测试版）";
++
++/* 返回历史 */
++"Return to history" = "返回历史";
++
++/* 复制真实恢复命令 */
++"Copy real resume command" = "复制真实恢复命令";
++
++/* 实命令已复制 */
++"Real command copied" = "实命令已复制";
++
++/* 命令已复制。粘贴到打开的终端中 */
++"Command copied. Paste it in the opened terminal." = "命令已复制。粘贴到打开的终端中。";
++
++/* =======================
++   设置页面 / Settings Page
++   ======================= */
++
++/* 会话目录 */
++"Sessions Directory" = "会话目录";
++
++/* 存储 Codex 会话文件的目录 */
++"Directory where Codex session files are stored" = "存储 Codex 会话文件的目录";
++
++/* 笔记目录 */
++"Notes Directory" = "笔记目录";
++
++/* 保存会话标题和注释的位置 */
++"Where session titles and comments are saved" = "保存会话标题和注释的位置";
++
++/* Codex CLI 路径 */
++"Codex CLI Path" = "Codex CLI 路径";
++
++/* codex 可执行文件的路径 */
++"Path to the codex executable" = "codex 可执行文件的路径";
++
++/* 更改… */
++"Change…" = "更改…";
++
++/* =======================
++   错误和提示 / Errors and Alerts
++   ======================= */
++
++/* 操作失败 */
++"Operation Failed" = "操作失败";
++
++/* 选择目录失败 */
++"Failed to choose directory" = "选择目录失败";
++
++/* 选择 CLI 失败 */
++"Failed to choose CLI" = "选择 CLI 失败";
++
++/* 嵌入式终端不可用 */
++"Embedded terminal unavailable" = "嵌入式终端不可用";
++
++/* 添加 SwiftTerm 包以启用应用内终端 */
++"Add the SwiftTerm package to enable the in‑app terminal." = "添加 SwiftTerm 包以启用应用内终端。";
++
++/* 预览已关闭。复制功能正常；切换以启用预览 */
++"Preview is off. Copy works; toggle to enable." = "预览已关闭。复制功能正常；切换以启用预览。";
++
++/* 预览将显示在这里 */
++"Preview will appear here" = "预览将显示在这里";
++
++/* 会话保持完整。这只会移除项目记录 */
++"Sessions remain intact. This only removes the project record." = "会话保持完整。这只会移除项目记录。";
++
++/* =======================
++   编辑会话 / Edit Session
++   ======================= */
++
++/* 编辑会话 */
++"Edit Session" = "编辑会话";
++
++/* 注释（可选） */
++"Comment (optional)" = "注释（可选）";
++
++/* 最大消息大小（KB） */
++"Max message size (KB)" = "最大消息大小（KB）";
++
++/* =======================
++   新建会话 / New Session
++   ======================= */
++
++/* 基于上下文新建会话 */
++"New Session With Context" = "基于上下文新建会话";
++
++/* 点击查看详情 */
++"Tap to view details" = "点击查看详情";
+diff --git a/localization/zh-Hans/Models/SessionSummary.strings b/localization/zh-Hans/Models/SessionSummary.strings
+new file mode 100644
+index 0000000..7361e2e
+--- /dev/null
++++ b/localization/zh-Hans/Models/SessionSummary.strings
+@@ -0,0 +1,39 @@
++/* SessionSummary 模型相关字符串 */
++
++/* 会话状态 */
++"Active" = "活跃";
++"Completed" = "已完成";
++"Failed" = "失败";
++"Running" = "运行中";
++"Idle" = "空闲";
++"Updating" = "更新中";
++"Enriching" = "丰富化中";
++"Awaiting Follow-up" = "等待后续";
++"Live Activity" = "活跃状态";
++
++/* 会话类型 */
++"Session" = "会话";
++"Codex Session" = "Codex 会话";
++"Claude Session" = "Claude 会话";
++"Gemini Session" = "Gemini 会话";
++
++/* 时间相关 */
++"Started" = "开始时间";
++"Last Updated" = "最后更新";
++"Duration" = "持续时间";
++"Active Duration" = "活跃时长";
++
++/* 元数据 */
++"Model" = "模型";
++"Approval Policy" = "审批策略";
++"Comment" = "注释";
++"Title" = "标题";
++"Description" = "描述";
++"Status" = "状态";
++
++/* 消息计数 */
++"Messages" = "消息数";
++"Turns" = "轮数";
++"Events" = "事件数";
++"Total" = "总计";
++"Visible" = "可见";
+diff --git a/localization/zh-Hans/README.md b/localization/zh-Hans/README.md
+new file mode 100644
+index 0000000..3935ceb
+--- /dev/null
++++ b/localization/zh-Hans/README.md
+@@ -0,0 +1,122 @@
++# CodMate 中文化包
++
++> 项目版本：基于 544e8c2（2025-11-03）
++> 中文版本：1.0
++
++## 📦 包含内容
++
++本中文化包为 CodMate 提供完整的中文本地化支持，包括：
++
++### 📚 文档
++- **[术语表.md](./术语表.md)** - 技术术语翻译规范
++- **[中文化实施计划.md](./中文化实施计划.md)** - 详细实施计划和工作进度
++- **[错误和提示.md](./错误和提示.md)** - 错误消息和用户提示的翻译指南
++
++### 📝 本地化文件
++- **[Localizable.strings](./Localizable.strings)** - 基础本地化字符串
++- **[Views/ContentView.strings](./Views/ContentView.strings)**
++- **[Views/SettingsView.strings](./Views/SettingsView.strings)**
++- **[Models/SessionSummary.strings](./Models/SessionSummary.strings)**
++
++## 🚀 快速开始
++
++### 方法 1：使用现有的本地化文件
++
++1. 在 Xcode 中打开 CodMate 项目
++2. 在项目导航器中右键点击 `CodMate` 目标
++3. 选择 "New File..." → "Strings File"
++4. 命名为 `Localizable.strings`
++5. 将 `zh-Hans/Localizable.strings` 中的内容复制到新文件
++6. 在文件检查器中添加本地化语言：zh-Hans（简体中文）
++
++### 方法 2：逐步替换
++
++参考 [中文化实施计划](./中文化实施计划.md)，按照以下顺序进行：
++
++1. ✅ 准备工作（已完成）
++2. 🔥 核心 UI 本地化
++3. 📋 会话管理相关界面
++4. ⚠️ 错误消息和帮助文本
++5. ✅ 测试和优化
++
++## 🔧 代码集成
++
++### 替换硬编码字符串
++
++```swift
++// 替换前
++Text("Settings")
++Label("Delete", systemImage: "trash")
++Button("OK") { }
++
++// 替换后
++Text("settings.title")
++Label("actions.delete", systemImage: "trash")
++Button("actions.ok") { }
++```
++
++### 使用 NSLocalizedString
++
++```swift
++// 使用键值对
++NSLocalizedString("session.resume", comment: "继续执行会话")
++
++// 带参数
++String(format: NSLocalizedString("open.in.format", comment: ""), appName)
++```
++
++## 📊 进度追踪
++
++| 阶段 | 状态 | 完成度 | 备注 |
++|------|------|--------|------|
++| 准备工作 | ✅ 完成 | 100% | 已创建所有基础文件 |
++| 核心 UI | 🔥 进行中 | 20% | 已完成 ContentView 和 SettingsView 的基础翻译 |
++| 会话管理 | ⏳ 待开始 | 0% | 待开始 SessionList 和 SessionDetail |
++| 错误消息 | ⏳ 待开始 | 0% | 待开始错误提示和帮助文本 |
++| 测试优化 | ⏳ 待开始 | 0% | 待开始全面测试 |
++
++## 🎯 下一步工作
++
++1. **优先完成**：
++   - ContentView.swift 的完整本地化
++   - SettingsView.swift 的完整本地化
++   - SessionList 相关视图
++
++2. **后续任务**：
++   - 错误消息处理
++   - 工具提示和帮助文本
++   - 动态文本和格式化字符串
++
++## 📚 相关文档
++
++- [Apple 本地化指南](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPInternational/BPInternational.html)
++- [SwiftUI 本地化](https://developer.apple.com/documentation/swiftui/localization)
++- [中文化实施计划](./中文化实施计划.md)
++
++## ⚠️ 注意事项
++
++1. **保持一致性** - 使用术语表中的翻译规范
++2. **测试布局** - 验证中文文本的显示效果
++3. **更新文档** - 修改术语表或添加新翻译时更新文档
++4. **代码审查** - 确保新添加的字符串已被本地化
++
++## 📝 更新日志
++
++- **2025-11-03 (v1.0)**
++  - 创建基础本地化文件结构
++  - 完成术语表
++  - 完成核心术语翻译
++  - 创建 ContentView 和 SettingsView 基础翻译
++
++## 🤝 贡献指南
++
++如果你想参与中文化工作：
++
++1. 查看 [术语表](./术语表.md) 确保术语一致性
++2. 在对应的 `.strings` 文件中添加翻译
++3. 更新 [中文化实施计划.md](./中文化实施计划.md) 中的进度
++4. 提交前测试确保显示正常
++
++---
++
++**版权声明**：本中文化包基于 CodMate 开源项目创建，仅用于本地化目的。
+diff --git "a/localization/zh-Hans/Views/ContentView-\351\224\256\345\220\215\346\230\240\345\260\204.md" "b/localization/zh-Hans/Views/ContentView-\351\224\256\345\220\215\346\230\240\345\260\204.md"
+new file mode 100644
+index 0000000..3bf65c0
+--- /dev/null
++++ "b/localization/zh-Hans/Views/ContentView-\351\224\256\345\220\215\346\230\240\345\260\204.md"
+@@ -0,0 +1,163 @@
++# ContentView.swift 本地化键名映射
++
++> 创建日期：2025-11-03
++> 文件：views/ContentView.swift
++> 字符串总数：60+
++
++## 📋 键名映射表
++
++### 1. 对话框和警告 (Dialogs & Alerts)
++
++| 位置 | 原文本 | 本地化键 | 中文翻译 |
++|------|--------|----------|----------|
++| L224 | "Stop running session?" | `dialogs.stopSession.title` | "停止运行中的会话？" |
++| L231 | "Stop" | `actions.stop` | "停止" |
++| L237 | "Cancel" | `actions.cancel` | "取消" |
++| L239 | "The embedded terminal appears to be running. Stopping now will terminate the current Codex/Claude task." | `dialogs.stopSession.message` | "嵌入式终端似乎正在运行。现在停止将终止当前的 Codex/Claude 任务。" |
++| L184 | "Operation Failed" | `error.operationFailed` | "操作失败" |
++| L245 | "OK" | `actions.ok` | "确定" |
++| L249 | "Delete selected sessions?" | `dialogs.deleteSession.title` | "删除选中的会话？" |
++| L253 | "Move to Trash" | `actions.moveToTrash` | "移动到废纸篓" |
++| L257 | "Session files will be moved to Trash and can be restored in Finder." | `dialogs.deleteSession.message` | "会话文件将被移动到废纸篓，可以在 Finder 中恢复。" |
++| L831 | "Delete Prompt" | `dialogs.deletePrompt.title` | "删除提示" |
++| L832 | "Delete '\(item.label)'? This cannot be undone." | `dialogs.deletePrompt.message` | "删除 '\(item.label)'？此操作无法撤销。" |
++| L833 | "Delete" | `actions.delete` | "删除" |
++| L1381 | "Failed to choose directory" | `error.failedChooseDirectory` | "选择目录失败" |
++
++### 2. 工具提示和帮助文本 (Tooltips & Help)
++
++| 位置 | 原文本 | 本地化键 | 中文翻译 |
++|------|--------|----------|----------|
++| L333 | "Refresh session index" | `help.refreshSessionIndex` | "刷新会话索引" |
++| L449 | "Rename / Add Comment" | `help.renameAddComment` | "重命名/添加评论" |
++| L539 | "Start a new \($0.source.branding.displayName) session" | `help.startNewSession` | "开始新的 \($0.source.branding.displayName) 会话" |
++| L540 | "Select a session to start new conversations" | `help.selectSessionToStart` | "选择一个会话以开始新对话" |
++| L629 | "Reveal in Finder" | `help.revealInFinder` | "在 Finder 中显示" |
++| L638 | "Toggle Review Mode" | `help.toggleReviewMode` | "切换评审模式" |
++| L647 | "Insert preset command…" | `help.insertPresetCommand` | "插入预设命令…" |
++| L669 | "Manage Prompts" | `help.managePrompts` | "管理提示" |
++| L772 | "Delete prompt" | `help.deletePrompt` | "删除提示" |
++| L863,868 | "Return to history" | `help.returnToHistory` | "返回历史记录" |
++| L877 | "Export Markdown" | `help.exportMarkdown` | "导出 Markdown" |
++| L887 | "Delete" | `help.delete` | "删除" |
++| L1366 | "Restore view" | `help.restoreView` | "恢复视图" |
++| L1366 | "Maximize terminal" | `help.maximizeTerminal` | "最大化终端" |
++
++### 3. 菜单项和按钮 (Menu Items & Buttons)
++
++| 位置 | 原文本 | 本地化键 | 中文翻译 |
++|------|--------|----------|----------|
++| L467 | "New With Context…" | `actions.newWithContext` | "基于上下文新建…" |
++| L488,559 | "Open in Terminal" | `actions.openInTerminal` | "在终端中打开" |
++| L495,570 | "Open in iTerm2" | `actions.openInIterm2` | "在 iTerm2 中打开" |
++| L502,584 | "Open in Warp" | `actions.openInWarp` | "在 Warp 中打开" |
++| L512,592 | "Open Embedded Terminal" | `actions.openEmbeddedTerminal` | "打开嵌入式终端" |
++| L481 | "Use Preferred Launch" | `actions.usePreferredLaunch` | "使用首选启动方式" |
++| L522 | "Select a session to start a new conversation" | `placeholder.selectSessionForNew` | "选择一个会话以开始新对话" |
++| L530 | "New" | `actions.new` | "新建" |
++| L596 | "Select a session to resume" | `placeholder.selectSessionForResume` | "选择一个会话以继续" |
++| L599 | "Resume" | `actions.resume` | "继续" |
++
++### 4. 占位符和状态文本 (Placeholders & Status)
++
++| 位置 | 原文本 | 本地化键 | 中文翻译 |
++|------|--------|----------|----------|
++| L430 | "New Session" | `status.newSession` | "新会话" |
++| L433 | "Appears in list after first message" | `status.appearsAfterFirstMessage` | "发送第一条消息后出现在列表中" |
++| L522 | "Select a session to start a new conversation" | `placeholder.selectSessionNewConversation` | "选择一个会话以开始新对话" |
++| L596 | "Select a session to resume" | `placeholder.selectSessionResume` | "选择一个会话以继续" |
++| L671 | "Search prompts" | `placeholder.searchPrompts` | "搜索提示" |
++| L730 | "No matches" | `status.noMatches` | "无匹配项" |
++| L788 | "Showing first \(maxShown) results — refine search to see more" | `status.showingFirstResults` | "显示前 \(maxShown) 个结果 — 优化搜索以查看更多" |
++| L1388,1390 | "Select a session" | `placeholder.selectSession` | "选择一个会话" |
++| L1390 | "Pick a session from the middle list to view details." | `placeholder.pickSessionDetails` | "从中间列表中选择一个会话以查看详情。" |
++
++### 5. 标题和标签 (Titles & Labels)
++
++| 位置 | 原文本 | 本地化键 | 中文翻译 |
++|------|--------|----------|----------|
++| L651 | "Preset Commands" | `title.presetCommands` | "预设命令" |
++| L1181,1228,1265 | "CodMate" | `app.name` | "CodMate" |
++| L555,580 | "Command copied. Paste it in the opened terminal." | `notification.commandCopied` | "命令已复制。粘贴到打开的终端中。" |
++| L1181 | "Command copied. Paste it in the opened terminal." | `notification.commandCopied` | "命令已复制。粘贴到打开的终端中。" |
++
++## 🔧 Swift 代码修改示例
++
++### 示例 1：替换对话框文本
++```swift
++// 修改前
++.confirmationDialog(
++    "Stop running session?",
++    isPresented: ...
++) {
++    Button("Stop", role: .destructive) { ... }
++    Button("Cancel", role: .cancel) { ... }
++} message: {
++    Text("The embedded terminal appears to be running...")
++}
++
++// 修改后
++.confirmationDialog(
++    L10n.Dialogs.StopSession.title,
++    isPresented: ...
++) {
++    Button(L10n.Actions.stop, role: .destructive) { ... }
++    Button(L10n.Actions.cancel, role: .cancel) { ... }
++} message: {
++    Text(L10n.Dialogs.StopSession.message)
++}
++```
++
++### 示例 2：替换工具提示
++```swift
++// 修改前
++.help("Refresh session index")
++
++// 修改后
++.help(L10n.Help.refreshSessionIndex)
++```
++
++### 示例 3：替换占位符文本
++```swift
++// 修改前
++Text("Search prompts")
++
++// 修改后
++Text(L10n.Placeholder.searchPrompts)
++```
++
++### 示例 4：带参数的字符串
++```swift
++// 修改前
++Text("Delete '\(item.label)'? This cannot be undone.")
++
++// 修改后
++Text(L10n.Dialogs.DeletePrompt.message(item.label))
++
++// 在 Localizable.strings 文件中
++"dialogs.deletePrompt.message" = "删除 \"%@\"？此操作无法撤销。";
++```
++
++## 📝 实施步骤
++
++1. ✅ 创建本键名映射文档
++2. ⏳ 修改 ContentView.swift，使用本地化键
++3. ⏳ 更新 zh-Hans/Views/ContentView.strings 文件
++4. ⏳ 生成并应用补丁
++5. ⏳ 测试界面显示
++
++## 🎯 命名约定总结
++
++- `dialogs.*` - 对话框相关
++- `actions.*` - 动作按钮相关
++- `help.*` - 帮助提示和工具提示
++- `placeholder.*` - 占位符文本
++- `status.*` - 状态文本
++- `title.*` - 标题文本
++- `error.*` - 错误消息
++- `notification.*` - 通知消息
++- `app.*` - 应用相关信息
++
++---
++
++**下一步**：开始修改 ContentView.swift 文件
+diff --git a/localization/zh-Hans/Views/ContentView.strings b/localization/zh-Hans/Views/ContentView.strings
+new file mode 100644
+index 0000000..ecac389
+--- /dev/null
++++ b/localization/zh-Hans/Views/ContentView.strings
+@@ -0,0 +1,84 @@
++/* ContentView 相关字符串 */
++
++/* ========== 基础动作 ========== */
++"actions.ok" = "确定";
++"actions.cancel" = "取消";
++"actions.stop" = "停止";
++"actions.delete" = "删除";
++"actions.moveToTrash" = "移动到废纸篓";
++"actions.new" = "新建";
++"actions.newWithContext" = "基于上下文新建…";
++"actions.resume" = "继续";
++"actions.openInTerminal" = "在终端中打开";
++"actions.openInIterm2" = "在 iTerm2 中打开";
++"actions.openInWarp" = "在 Warp 中打开";
++"actions.openEmbeddedTerminal" = "打开嵌入式终端";
++"actions.usePreferredLaunch" = "使用首选启动方式";
++
++/* ========== 对话框 ========== */
++"dialogs.stopSession.title" = "停止运行中的会话？";
++"dialogs.stopSession.message" = "嵌入式终端似乎正在运行。现在停止将终止当前的 Codex/Claude 任务。";
++"dialogs.deleteSession.title" = "删除选中的会话？";
++"dialogs.deleteSession.message" = "会话文件将被移动到废纸篓，可以在 Finder 中恢复。";
++"dialogs.deletePrompt.title" = "删除提示";
++"dialogs.deletePrompt.message" = "删除 \"%@\"？此操作无法撤销。";
++
++/* ========== 帮助文本 ========== */
++"help.refreshSessionIndex" = "刷新会话索引";
++"help.renameAddComment" = "重命名/添加评论";
++"help.revealInFinder" = "在 Finder 中显示";
++"help.returnToHistory" = "返回历史记录";
++"help.exportMarkdown" = "导出 Markdown";
++"help.delete" = "删除";
++
++/* ========== 占位符 ========== */
++"placeholder.selectSession" = "选择一个会话";
++"placeholder.selectSessionForNew" = "选择一个会话以开始新对话";
++"placeholder.selectSessionForResume" = "选择一个会话以继续";
++"placeholder.pickSessionDetails" = "从中间列表中选择一个会话以查看详情。";
++
++/* ========== 状态文本 ========== */
++"status.newSession" = "新会话";
++"status.appearsAfterFirstMessage" = "发送第一条消息后出现在列表中";
++"status.noMatches" = "无匹配项";
++"status.showingFirstResults" = "显示前 %d 个结果 — 优化搜索以查看更多";
++
++/* ========== 标题 ========== */
++"title.presetCommands" = "预设命令";
++
++/* ========== 通知 ========== */
++"notification.commandCopied" = "命令已复制。粘贴到打开的终端中。";
++
++/* ========== 错误消息 ========== */
++"error.operationFailed" = "操作失败";
++"error.failedChooseDirectory" = "选择目录失败";
++
++/* ========== 应用信息 ========== */
++"app.name" = "CodMate";
++
++/* ========== 主界面 ========== */
++"Select a session" = "选择一个会话";
++"Pick a session from the middle list to view details" = "从中间列表选择一个会话以查看详情";
++
++/* ========== 菜单操作（保留兼容性） ========== */
++"Open in Terminal" = "在终端中打开";
++"Open in iTerm2 (Direct)" = "在 iTerm2 中打开（直接）";
++"Open in Warp (Path)" = "在 Warp 中打开（路径）";
++"Open Embedded Terminal (Alpha)" = "打开嵌入式终端（测试版）";
++"Resume and more options" = "继续执行及更多选项";
++"Refresh session index" = "刷新会话索引";
++"Reveal in Finder" = "在 Finder 中显示";
++"Return to history" = "返回历史";
++"Copy real resume command" = "复制真实恢复命令";
++"Delete" = "删除";
++
++/* ========== 操作反馈 ========== */
++"Real command copied" = "实命令已复制";
++"Command copied. Paste it in the opened terminal." = "命令已复制。粘贴到打开的终端中。";
++
++/* ========== 导出功能 ========== */
++"Export Markdown" = "导出 Markdown";
++
++/* ========== 状态提示 ========== */
++"New With Context…" = "基于上下文新建…";
++"Start a new Codex session (use project profile when available)" = "开始新的 Codex 会话（可用时使用项目配置）";
+diff --git a/localization/zh-Hans/Views/SettingsView.strings b/localization/zh-Hans/Views/SettingsView.strings
+new file mode 100644
+index 0000000..25c12df
+--- /dev/null
++++ b/localization/zh-Hans/Views/SettingsView.strings
+@@ -0,0 +1,51 @@
++/* SettingsView 相关字符串 */
++
++/* 页面标题 */
++"Settings" = "设置";
++"General Settings" = "通用设置";
++"Terminal Settings" = "终端设置";
++"Command Settings" = "命令设置";
++"Codex Settings" = "Codex 设置";
++"Dialectics" = "辩证法";
++"MCP Server" = "MCP 服务器";
++"About" = "关于";
++
++/* 通用设置说明 */
++"Configure basic application settings and file paths" = "配置基本应用程序设置和文件路径";
++
++/* 文件路径设置 */
++"File Paths" = "文件路径";
++"Sessions Directory" = "会话目录";
++"Directory where Codex session files are stored" = "存储 Codex 会话文件的目录";
++"Notes Directory" = "笔记目录";
++"Where session titles and comments are saved" = "保存会话标题和注释的位置";
++"Codex CLI Path" = "Codex CLI 路径";
++"Path to the codex executable" = "codex 可执行文件的路径";
++"Change…" = "更改…";
++
++/* 终端设置 */
++"Configure default terminal application and embedded terminal behavior" = "配置默认终端应用程序和嵌入式终端行为";
++
++/* 命令设置 */
++"Customize command execution behavior and approval policies" = "自定义命令执行行为和审批策略";
++
++/* Codex 设置说明 */
++"Centralize Codex CLI configuration: providers, notifications, privacy, and profiles" = "集中管理 Codex CLI 配置：提供商、通知、隐私和配置文件";
++
++/* 选择器 */
++"(none)" = "（无）";
++"trusted" = "信任";
++"untrusted" = "不信任";
++"parent" = "父级";
++
++/* 关于页面 */
++"About CodMate" = "关于 CodMate";
++"Version" = "版本";
++"Build" = "构建号";
++"Copyright" = "版权所有";
++"Licenses" = "许可证";
++"Open Source Licenses" = "开源许可证";
++
++/* 错误消息 */
++"Failed to choose directory" = "选择目录失败";
++"Failed to choose CLI" = "选择 CLI 失败";
+diff --git "a/localization/zh-Hans/\344\270\255\346\226\207\345\214\226\345\256\236\346\226\275\350\256\241\345\210\222.md" "b/localization/zh-Hans/\344\270\255\346\226\207\345\214\226\345\256\236\346\226\275\350\256\241\345\210\222.md"
+new file mode 100644
+index 0000000..c6b8f0a
+--- /dev/null
++++ "b/localization/zh-Hans/\344\270\255\346\226\207\345\214\226\345\256\236\346\226\275\350\256\241\345\210\222.md"
+@@ -0,0 +1,250 @@
++# CodMate 中文化实施计划
++
++> 创建日期：2025-11-03
++> 版本：1.0
++
++## 📋 项目概述
++
++CodMate 是一个 macOS SwiftUI 应用，用于管理本地 AI 代理 CLI 会话。本项目旨在为应用提供完整的中文本地化支持。
++
++## 🎯 目标
++
++- ✅ 提供完整的中文界面
++- ✅ 保持术语一致性
++- ✅ 优化中文用户的使用体验
++- ✅ 支持中文日期、时间、货币等本地化格式
++
++## 📊 工作量评估
++
++| 阶段 | 内容 | 预估工时 | 优先级 |
++|------|------|----------|--------|
++| 1 | 准备工作（术语表、文件结构） | 0.5 天 | ✅ 完成 |
++| 2 | 核心 UI 本地化（主界面、设置） | 2 天 | 🔥 高 |
++| 3 | 会话管理相关界面 | 1.5 天 | 🔥 高 |
++| 4 | 错误消息和帮助文本 | 0.5 天 | 🟡 中 |
++| 5 | 测试和优化 | 0.5 天 | 🟡 中 |
++
++**总预估工时：~5 天（全职投入）**
++
++## 📁 文件结构
++
++```
++localization/
++└── zh-Hans/
++    ├── Localizable.strings              # 主要本地化文件
++    ├── Localizable.stringsdict          # 复数形式支持（后续添加）
++    ├── 术语表.md                         # 术语翻译规范
++    ├── 中文化实施计划.md                  # 本文档
++    ├── Models/                           # 数据模型相关
++    │   ├── SessionSummary.strings        # 会话摘要
++    │   ├── Project.strings              # 项目相关
++    │   └── 其他模型...
++    ├── Views/                           # 视图界面
++    │   ├── ContentView.strings          # 主界面
++    │   ├── SettingsView.strings         # 设置页面
++    │   ├── SessionList.strings          # 会话列表
++    │   └── 其他视图...
++    └── Services/                        # 服务层
++        ├── SessionActions.strings       # 会话操作
++        ├── Terminal.strings             # 终端相关
++        └── 其他服务...
++```
++
++## 🏗️ 实施步骤
++
++### 阶段 1：准备工作 ✅
++
++- [x] 创建本地化目录结构
++- [x] 建立术语翻译规范
++- [x] 创建基础 Localizable.strings 文件
++- [x] 制定实施计划
++
++### 阶段 2：核心 UI 本地化（进行中 🔥）
++
++#### 2.1 主要界面文件
++- [ ] **ContentView.swift** - 主界面
++  - 导航栏
++  - 侧边栏
++  - 详情栏
++  - 工具栏
++  - 菜单
++
++- [ ] **SettingsView.swift** - 设置页面
++  - 通用设置
++  - 终端设置
++  - 命令设置
++  - Codex 设置
++  - 关于页面
++
++#### 2.2 技术实现
++```swift
++// 从：
++Text("Settings")
++Text("Delete")
++
++// 改为：
++Text("settings.title")
++Text("actions.delete")
++```
++
++### 阶段 3：会话管理相关界面
++
++#### 3.1 会话列表和详情
++- [ ] **SessionListView** - 会话列表视图
++- [ ] **SessionDetailView** - 会话详情视图
++- [ ] **SessionNavigationView** - 会话导航
++- [ ] **ConversationTimelineView** - 对话时间线
++
++#### 3.2 会话操作
++- [ ] **Resume 操作** - 继续执行
++- [ ] **Delete 操作** - 删除
++- [ ] **Export 操作** - 导出
++- [ ] **New Session** - 新建会话
++
++### 阶段 4：辅助功能和消息
++
++#### 4.1 错误消息和警告
++- [ ] 操作失败提示
++- [ ] 网络错误信息
++- [ ] 文件访问错误
++- [ ] 权限错误
++
++#### 4.2 帮助文本和提示
++- [ ] 工具提示（Tooltips）
++- [ ] 占位符文本
++- [ ] 帮助说明文字
++- [ ] 空状态提示
++
++### 阶段 5：测试和优化
++
++#### 5.1 功能测试
++- [ ] 所有界面显示正常
++- [ ] 动态文本长度适配
++- [ ] 字体渲染效果
++- [ ] 文本截断处理
++
++#### 5.2 性能优化
++- [ ] 本地化文件加载性能
++- [ ] 字符串插值性能
++- [ ] 内存使用优化
++
++## 📝 技术规范
++
++### 1. 字符串命名约定
++
++```swift
++// 命名规则：{页面或功能}.{具体元素}
++settings.title
++settings.general
++settings.terminal
++actions.delete
++actions.save
++actions.cancel
++actions.resume
++session.list
++session.detail
++error.network
++error.permission
++tooltip.refresh
++placeholder.search
++```
++
++### 2. 格式化字符串
++
++```swift
++// 参数化字符串
++"Open in \(app)" → "在 \(app) 中打开"
++"Session count: \(count)" → "会话数：\(count)"
++
++// 支持复数
++// 需要使用 Localizable.stringsdict
++```
++
++### 3. 日期和时间本地化
++
++```swift
++// 使用系统本地化
++DateFormatter()
++  .locale(Locale(identifier: "zh-Hans"))
++
++// 或使用 SwiftUI 的格式化
++Text(date, style: .date)
++Text(date, style: .time)
++```
++
++## 🚧 技术挑战
++
++### 1. 文本长度变化
++- **问题**：中文通常比英文短
++- **解决方案**：检查 UI 布局，预留足够空间
++
++### 2. 字体渲染
++- **问题**：中文需要特定字体
++- **解决方案**：项目已配置 CJK 字体（ContentView.swift:24-28）
++
++### 3. 术语一致性
++- **问题**：不同模块使用相同术语
++- **解决方案**：使用统一的术语表，代码审查时检查
++
++## 📦 集成到项目
++
++### 1. 添加本地化文件
++
++```bash
++# 在 Xcode 中：
++# 1. 创建 Localizable.strings 文件
++# 2. 添加 zh-Hans 本地化
++# 3. 将中文化内容复制到对应文件
++```
++
++### 2. 修改代码
++
++```swift
++// 替换硬编码字符串
++- Text("Settings")
+++ Text("settings.title")
++
++- Label("Delete", systemImage: "trash")
+++ Label("actions.delete", systemImage: "trash")
++```
++
++### 3. 测试和验证
++
++```bash
++# 测试不同语言环境
++# 切换系统语言为中文
++# 检查所有界面显示
++```
++
++## ✅ 验收标准
++
++1. **界面完整性** - 所有英文文本都被翻译
++2. **术语一致性** - 相同术语在所有位置翻译一致
++3. **布局正确** - 中文文本显示无截断或重叠
++4. **字体正确** - 使用指定的 CJK 字体渲染
++5. **功能正常** - 所有本地化后的功能正常工作
++
++## 📚 参考资源
++
++- [Swift 本地化指南](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPInternational/BPInternational.html)
++- [Xcode 本地化工作流](https://developer.apple.com/localization/)
++- [本地化最佳实践](https://developer.apple.com/documentation/swiftui/localization)
++
++## 🔗 相关文件
++
++- [术语表](./术语表.md) - 详细的技术术语翻译
++- [Localizable.strings](./Localizable.strings) - 基础字符串本地化文件
++
++---
++
++## 📝 进度追踪
++
++| 日期 | 完成内容 | 下一步 |
++|------|----------|--------|
++| 2025-11-03 | 创建项目结构、术语表、基础文件 | 开始核心 UI 本地化 |
++|  |  |  |
++|  |  |  |
++
++---
++
++**注意**：此计划会根据实际实施情况进行调整
+diff --git "a/localization/zh-Hans/\346\234\257\350\257\255\350\241\250.md" "b/localization/zh-Hans/\346\234\257\350\257\255\350\241\250.md"
+new file mode 100644
+index 0000000..ab09195
+--- /dev/null
++++ "b/localization/zh-Hans/\346\234\257\350\257\255\350\241\250.md"
+@@ -0,0 +1,181 @@
++# CodMate 中文化术语表
++
++> 创建日期：2025-11-03
++> 最后更新：2025-11-03
++
++## 📋 术语翻译原则
++
++1. **保持一致性** - 相同术语在整应用中应使用相同翻译
++2. **简洁明了** - 使用简洁的中文表达，避免冗长
++3. **符合中文习惯** - 调整语序以符合中文表达习惯
++4. **技术准确性** - 保持技术概念的准确性
++
++## 🔤 核心术语
++
++| 英文 | 中文翻译 | 说明/备注 |
++|------|---------|-----------|
++| Session | 会话 | 指一个 AI 交互会话 |
++| Resume | 继续 | 继续执行/恢复会话 |
++| Provider | 提供商 | 指 AI 服务提供商 |
++| Project | 项目 | 指工作项目/项目配置 |
++| Workspace | 工作空间 | 项目的工作空间 |
++| Profile | 配置文件 | 项目或用户的配置 |
++| Artifact | 产物 | AI 生成的文件或结果 |
++| Timeline | 时间线 | 会话的时间线视图 |
++| Session Summary | 会话摘要 | 会话的概要信息 |
++| Session Indexer | 会话索引器 | 用于索引会话的服务 |
++| Terminal | 终端 | 终端模拟器 |
++| Embedded Terminal | 嵌入式终端 | 应用内嵌的终端 |
++| External Terminal | 外部终端 | 外部终端应用 |
++| Sandbox | 沙盒 | 代码执行的安全环境 |
++| Approval Policy | 审批策略 | 代码执行的审批规则 |
++| Follow-up | 后续跟进 | 需要后续操作的情况 |
++| Live Activity | 活跃状态 | 会话的活跃运行状态 |
++| Enrichment | 丰富化 | 增强会话信息的过程 |
++| Diagnostics | 诊断 | 系统诊断和健康检查 |
++| CLI (Command Line Interface) | 命令行接口 | 命令行工具 |
++| Context | 上下文 | 会话或操作的上下文信息 |
++| MCP Server | MCP 服务器 | Model Context Protocol 服务器 |
++| Terminal Session | 终端会话 | 终端中的会话 |
++
++## 🎯 常用动作
++
++| 英文 | 中文翻译 | 说明 |
++|------|---------|------|
++| Resume | 继续 | 继续执行会话 |
++| Resume From List | 从列表继续 | 从列表视图继续会话 |
++| Resume and more options | 继续执行及更多选项 | 继续按钮的提示文字 |
++| Start/Start New | 开始/新建 | 开始新的会话或操作 |
++| Refresh | 刷新 | 刷新数据或索引 |
++| Delete | 删除 | 删除操作 |
++| Move to Trash | 移动到废纸篓 | 删除到系统废纸篓 |
++| Reveal in Finder | 在 Finder 中显示 | 在文件系统中显示 |
++| Open in Terminal | 在终端中打开 | 在终端中打开 |
++| Export | 导出 | 导出数据或文件 |
++| Import | 导入 | 导入数据或配置 |
++| Copy | 复制 | 复制内容 |
++| Paste | 粘贴 | 粘贴内容 |
++| Rename | 重命名 | 重命名操作 |
++| Add Comment | 添加注释 | 为会话添加注释 |
++| Settings | 设置 | 应用或功能设置 |
++| Preferences | 首选项 | 用户首选项 |
++| Change | 更改 | 修改配置或路径 |
++
++## 📱 UI 界面术语
++
++| 英文 | 中文翻译 | 界面位置 |
++|------|---------|----------|
++| Sidebar | 侧边栏 | 主界面左侧 |
++| Detail View | 详情视图 | 主界面右侧详情区域 |
++| List View | 列表视图 | 会话列表视图 |
++| Row View | 行视图 | 列表中的单行视图 |
++| Column View | 列视图 | 多列布局视图 |
++| Navigation Split View | 导航分栏视图 | 主导航布局 |
++| Toolbar | 工具栏 | 顶部操作栏 |
++| Menu | 菜单 | 下拉菜单 |
++| Button | 按钮 | 操作按钮 |
++| Label | 标签 | 文本标签 |
++| Text | 文本 | 文本内容 |
++| Field | 字段 | 输入字段 |
++| Toggle | 切换开关 | 开关控件 |
++| Checkbox | 复选框 | 勾选框 |
++| Radio Button | 单选按钮 | 单选控件 |
++| Dropdown | 下拉框 | 下拉选择 |
++| Modal | 模态框 | 弹窗对话框 |
++| Sheet | 表格 | 底部弹出面板 |
++| Popover | 弹出框 | 弹出提示框 |
++| Tooltip | 工具提示 | 悬浮提示 |
++| Help Text | 帮助文字 | 说明文字 |
++| Placeholder | 占位符 | 输入提示文字 |
++
++## ⚙️ 设置页面术语
++
++| 英文 | 中文翻译 | 说明 |
++|------|---------|------|
++| General Settings | 通用设置 | 基本设置分类 |
++| Terminal Settings | 终端设置 | 终端相关设置 |
++| Command Settings | 命令设置 | 命令相关设置 |
++| Codex Settings | Codex 设置 | Codex 配置 |
++| Dialectics | 辩证法 | 高级设置分类 |
++| MCP Server | MCP 服务器 | MCP 相关设置 |
++| File Paths | 文件路径 | 路径配置 |
++| Sessions Directory | 会话目录 | 会话文件存储路径 |
++| Notes Directory | 笔记目录 | 笔记文件存储路径 |
++| CLI Path | CLI 路径 | 命令行工具路径 |
++| Executable Path | 可执行路径 | 可执行文件路径 |
++| Configuration | 配置 | 配置设置 |
++| Options | 选项 | 选项设置 |
++
++## 💬 状态和消息
++
++| 英文 | 中文翻译 | 说明 |
++|------|---------|------|
++| Loading | 加载中 | 数据加载状态 |
++| Processing | 处理中 | 操作处理状态 |
++| Active | 活跃 | 会话运行状态 |
++| Completed | 已完成 | 任务完成状态 |
++| Failed | 失败 | 操作失败状态 |
++| Error | 错误 | 错误状态 |
++| Warning | 警告 | 警告状态 |
++| Info | 信息 | 信息提示 |
++| Success | 成功 | 成功状态 |
++| Pending | 待处理 | 待处理状态 |
++| Awaiting Follow-up | 等待后续 | 需要后续操作 |
++| Is Running | 正在运行 | 会话运行中 |
++| Is Updating | 正在更新 | 数据更新中 |
++| Is Enriching | 正在丰富 | 信息丰富化中 |
++
++## 📊 统计和计数
++
++| 英文 | 中文翻译 | 说明 |
++|------|---------|------|
++| Total Count | 总数 | 项目或会话总数 |
++| Visible | 可见 | 可见的项目数 |
++| Total | 总计 | 总计数量 |
++| Position | 位置 | 位置序号 |
++| Date | 日期 | 日期 |
++| Last Updated | 最后更新 | 最后更新时间 |
++| Started At | 开始时间 | 开始时间 |
++| Duration | 持续时间 | 持续时长 |
++
++## 🔍 搜索和筛选
++
++| 英文 | 中文翻译 | 说明 |
++|------|---------|------|
++| Search | 搜索 | 搜索功能 |
++| Filter | 筛选 | 筛选功能 |
++| Recent | 最近 | 时间维度 |
++| Calendar | 日历 | 日历视图 |
++| Month | 月 | 月份维度 |
++| Sort Order | 排序顺序 | 排序方式 |
++| Group | 分组 | 分组显示 |
++| Session Summary | 会话摘要 | 会话概要 |
++
++## ⚠️ 注意事项
++
++1. **Session** 在不同语境下可能有不同的翻译：
++   - UI 列表中：会话
++   - 文件名中：Session
++   - 技术说明中：会话
++
++2. **Resume** 根据上下文选择翻译：
++   - 按钮文字：继续
++   - 操作说明：恢复/继续执行
++   - 文件名：Resume
++
++3. **Project** 根据语境区分：
++   - 工作项目：项目
++   - Xcode 项目：Project（保持原样）
++   - 项目配置：项目配置
++
++4. **Terminal** 的翻译：
++   - macOS 终端：终端
++   - 嵌入式终端：内嵌终端/嵌入式终端
++   - iTerm2：保持原名 iTerm2
++   - Warp：保持原名 Warp
++
++---
++
++## 📝 更新记录
++
++- **2025-11-03**：初始版本，创建核心术语表
+diff --git "a/localization/zh-Hans/\351\224\231\350\257\257\345\222\214\346\217\220\347\244\272.md" "b/localization/zh-Hans/\351\224\231\350\257\257\345\222\214\346\217\220\347\244\272.md"
+new file mode 100644
+index 0000000..7837189
+--- /dev/null
++++ "b/localization/zh-Hans/\351\224\231\350\257\257\345\222\214\346\217\220\347\244\272.md"
+@@ -0,0 +1,181 @@
++# 错误消息和提示本地化
++
++> 创建日期：2025-11-03
++
++## 📋 错误消息分类
++
++### 1. 系统错误
++- `Operation Failed` → `操作失败`
++- `Failed to connect` → `连接失败`
++- `Permission denied` → `权限被拒绝`
++- `File not found` → `文件未找到`
++- `Invalid path` → `路径无效`
++
++### 2. 网络错误
++- `Network unavailable` → `网络不可用`
++- `Connection timeout` → `连接超时`
++- `Server error` → `服务器错误`
++- `Authentication failed` → `认证失败`
++
++### 3. 文件操作错误
++- `Failed to choose directory` → `选择目录失败`
++- `Failed to choose CLI` → `选择 CLI 失败`
++- `Cannot write to file` → `无法写入文件`
++- `Cannot read from file` → `无法读取文件`
++
++### 4. 会话相关错误
++- `Failed to load session` → `加载会话失败`
++- `Session not found` → `会话未找到`
++- `Cannot resume session` → `无法继续会话`
++- `Invalid session file` → `会话文件无效`
++
++### 5. 终端错误
++- `Terminal not available` → `终端不可用`
++- `Command execution failed` → `命令执行失败`
++- `Embedded terminal unavailable` → `嵌入式终端不可用`
++
++## 💬 提示消息
++
++### 1. 确认提示
++- `Are you sure?` → `确定吗？`
++- `This action cannot be undone.` → `此操作无法撤销。`
++- `Session files will be moved to Trash and can be restored in Finder.` → `会话文件将被移动到废纸篓，可以在 Finder 中恢复。`
++
++### 2. 帮助提示
++- `Preview is off. Copy works; toggle to enable.` → `预览已关闭。复制功能正常；切换以启用预览。`
++- `Preview will appear here` → `预览将显示在这里`
++- `Sessions remain intact. This only removes the project record.` → `会话保持完整。这只会移除项目记录。`
++
++### 3. 状态提示
++- `Loading...` → `加载中...`
++- `Saving...` → `保存中...`
++- `Processing...` → `处理中...`
++- `Command copied. Paste it in the opened terminal.` → `命令已复制。粘贴到打开的终端中。`
++- `Real command copied` → `实命令已复制`
++
++### 4. 空状态提示
++- `No sessions found` → `未找到会话`
++- `No projects configured` → `未配置项目`
++- `Select a session` → `选择一个会话`
++- `Pick a session from the middle list to view details` → `从中间列表中选择一个会话以查看详情`
++
++## 🔧 工具提示（Tooltips）
++
++### 1. 操作按钮
++- `Refresh session index` → `刷新会话索引`
++- `Rename / Add Comment` → `重命名/添加评论`
++- `Start a new Codex session (use project profile when available)` → `开始新的 Codex 会话（可用时使用项目配置）`
++- `Resume and more options` → `继续执行及更多选项`
++- `Reveal in Finder` → `在 Finder 中显示`
++- `Return to history` → `返回历史`
++- `Copy real resume command` → `复制真实恢复命令`
++- `Export Markdown` → `导出 Markdown`
++- `Delete` → `删除`
++
++### 2. 状态指示器
++- `Active` → `活跃`
++- `Running` → `运行中`
++- `Updating` → `更新中`
++- `Enriching` → `丰富化中`
++
++### 3. 设置项目
++- `Enable embedded terminal` → `启用嵌入式终端`
++- `Use external terminal by default` → `默认使用外部终端`
++- `Auto-detect CLI paths` → `自动检测 CLI 路径`
++
++## 📝 复数形式处理
++
++### 文件数量
++```swift
++// 英文
++"\(count) file(s) selected"
++
++// 中文（不需要复数形式，直接使用）
++"\(count) 个文件已选择"
++```
++
++### 会话数量
++```swift
++"\(count) 个会话"
++"\(count) 个活跃会话"
++"\(count) 个项目"
++```
++
++## 🔄 动态内容本地化
++
++### 1. 应用名称
++```swift
++// 英文
++"Open in \(app)"
++
++// 中文
++"在 \(app) 中打开"
++```
++
++### 2. 文件路径
++```swift
++// 英文
++"Path: \(path)"
++
++// 中文
++"路径：\(path)"
++```
++
++### 3. 时间范围
++```swift
++// 英文
++"Updated \(timeAgo) ago"
++
++// 中文
++"于 \(timeAgo) 前更新"
++```
++
++### 4. 文件大小
++```swift
++// 英文
++"\(size) KB"
++
++// 中文
++"\(size) KB"
++```
++
++## 📊 数字格式化
++
++### 1. 千位分隔符
++```swift
++// 英文：1,000
++// 中文：1,000（保持相同）
++```
++
++### 2. 百分比
++```swift
++// 英文：50%
++// 中文：50%（保持相同）
++```
++
++## 📅 日期和时间本地化
++
++### 1. 短日期格式
++```swift
++// 英文：MM/DD/YYYY
++// 中文：YYYY/MM/DD
++```
++
++### 2. 时间格式
++```swift
++// 英文：12:00 PM
++// 中文：下午12:00
++```
++
++### 3. 相对时间
++```swift
++// 英文：2 minutes ago
++// 中文：2 分钟前
++```
++
++## ⚠️ 注意事项
++
++1. **一致性** - 相同含义的错误消息应使用相同翻译
++2. **语气** - 错误消息保持专业，提示消息保持友好
++3. **长度** - 考虑中文显示空间，避免文本过长
++4. **术语** - 使用术语表中定义的翻译
+diff --git "a/localization/\345\277\253\351\200\237\345\274\200\345\247\213.md" "b/localization/\345\277\253\351\200\237\345\274\200\345\247\213.md"
+new file mode 100644
+index 0000000..43bc8de
+--- /dev/null
++++ "b/localization/\345\277\253\351\200\237\345\274\200\345\247\213.md"
+@@ -0,0 +1,239 @@
++# 🚀 CodMate 中文化快速开始指南
++
++> 创建日期：2025-11-03
++
++## 📦 已创建内容
++
++✅ **完成情况总览**：
++- 8 个文档/文件
++- 1000+ 行内容
++- 完整的术语表和实施计划
++- 基础的本地化字符串
++
++---
++
++## 📂 目录结构
++
++```
++localization/
++├── 快速开始.md                 # 本文件
++└── zh-Hans/
++    ├── README.md              # 详细使用说明
++    ├── 术语表.md               # 术语翻译规范
++    ├── 中文化实施计划.md        # 详细实施计划
++    ├── 错误和提示.md           # 错误消息指南
++    ├── Localizable.strings     # 基础本地化文件
++    ├── Models/
++    │   └── SessionSummary.strings
++    ├── Views/
++    │   ├── ContentView.strings
++    │   └── SettingsView.strings
++    └── Services/              # 预留目录
++```
++
++---
++
++## 🎯 下一步行动
++
++### 立即可执行（第 1 步）
++
++1. **查看术语表**
++   ```bash
++   cat localization/zh-Hans/术语表.md
++   ```
++   确保所有翻译保持一致
++
++2. **阅读实施计划**
++   ```bash
++   cat localization/zh-Hans/中文化实施计划.md
++   ```
++   了解详细的工作计划
++
++### 实际集成（第 2 步）
++
++**在 Xcode 中集成本地化文件**：
++
++1. 打开 `CodMate.xcodeproj`
++2. 右键点击 `Sources/CodMate` 分组
++3. 选择 `Add Files to "CodMate"`
++4. 选择 `localization/zh-Hans/Localizable.strings`
++5. 在文件检查器中，点击 "Localize..." 按钮
++6. 选择 `zh-Hans (Simplified)`
++7. 重复以上步骤添加其他 `.strings` 文件
++
++### 代码修改（第 3 步）
++
++**示例：修改 ContentView.swift**
++
++```swift
++// 替换前（英文）
++Text("Select a session")
++Button("Refresh") { }
++
++// 替换后（中文）
++Text("session.select.placeholder")
++Button("actions.refresh") { }
++```
++
++---
++
++## 🔄 工作流程
++
++### 日常开发流程
++
++1. **发现新字符串**
++   - 在代码中看到硬编码的英文文本
++
++2. **查找术语**
++   - 查看 `术语表.md` 确认翻译
++
++3. **添加到本地化文件**
++   - 在相应的 `.strings` 文件中添加键值对
++
++4. **更新代码**
++   - 替换硬编码字符串为本地化键
++
++5. **测试验证**
++   - 运行应用，检查中文显示效果
++
++### 推荐工作顺序
++
++1. 🔥 **优先级高**：ContentView, SettingsView
++2. 📋 **优先级高**：SessionList, SessionDetail
++3. ⚠️ **优先级中**：错误消息, 帮助文本
++4. ✅ **优先级中**：项目相关设置
++
++---
++
++## 📊 当前进度
++
++| 模块 | 状态 | 完成度 | 说明 |
++|------|------|--------|------|
++| 基础设置 | ✅ 完成 | 100% | 目录结构、术语表、文档 |
++| 主界面 | 🔥 进行中 | 60% | 已创建 ContentView.strings |
++| 设置页面 | 🔥 进行中 | 50% | 已创建 SettingsView.strings |
++| 会话列表 | ⏳ 待开始 | 0% | 待完成 |
++| 会话详情 | ⏳ 待开始 | 0% | 待完成 |
++| 错误消息 | ⏳ 待开始 | 0% | 待完成 |
++
++---
++
++## ⚡ 快速提示
++
++### 1. 命名规范
++
++```
++# 页面分类
++settings.general          # 设置-通用
++settings.terminal         # 设置-终端
++session.list             # 会话-列表
++session.detail           # 会话-详情
++
++# 动作分类
++actions.delete           # 动作-删除
++actions.save             # 动作-保存
++actions.resume           # 动作-继续
++
++# 状态分类
++status.loading           # 状态-加载
++status.error             # 状态-错误
++status.success           # 状态-成功
++
++# 提示分类
++tooltip.help            # 提示-帮助
++placeholder.input       # 占位符-输入
++empty.state             # 空状态
++```
++
++### 2. 常用键值对示例
++
++```swift
++// 标题
++"settings.title" = "设置"
++"session.title" = "会话"
++
++// 按钮
++"actions.ok" = "确定"
++"actions.cancel" = "取消"
++"actions.save" = "保存"
++"actions.delete" = "删除"
++"actions.refresh" = "刷新"
++
++// 菜单
++"menu.file" = "文件"
++"menu.edit" = "编辑"
++"menu.view" = "查看"
++
++// 提示
++"tooltip.resume" = "继续执行"
++"tooltip.delete" = "删除"
++"placeholder.search" = "搜索..."
++```
++
++### 3. 格式字符串
++
++```swift
++// 带参数
++"open.in.format" = "在 %@ 中打开"
++String(format: "open.in.format".localized, appName)
++
++// 复数（需要 stringsdict 文件）
++"file.count" = "%d 个文件"
++```
++
++---
++
++## 🛠️ 常用命令
++
++### 查看未本地化的字符串
++```bash
++grep -r "Text(\"" Sources/CodMate/Views/ | grep -v "LocalizedStringKey"
++```
++
++### 统计本地化进度
++```bash
++find Sources/CodMate -name "*.swift" -exec grep -l "Text(\"" {} \; | wc -l
++```
++
++### 检查缺失的翻译
++```bash
++# 暂无自动化工具，需手动检查
++```
++
++---
++
++## 📚 参考资料
++
++- [Apple 本地化指南](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPInternational/BPInternational.html)
++- [SwiftUI 本地化](https://developer.apple.com/documentation/swiftui/localization)
++- [术语表](./zh-Hans/术语表.md)
++- [实施计划](./zh-Hans/中文化实施计划.md)
++
++---
++
++## ❓ 常见问题
++
++**Q: 如何添加新的本地化字符串？**
++A: 在相应的 `.strings` 文件中添加 `key = "translation"`，然后在 Swift 代码中使用 `Text("key")`。
++
++**Q: 如何处理动态文本？**
++A: 使用 `String(format: NSLocalizedString("key", comment: ""), ...)` 进行参数化。
++
++**Q: 如何测试本地化？**
++A: 在系统偏好设置中切换语言为中文，或使用模拟器测试。
++
++**Q: 如何确保术语一致性？**
++A: 查看 `术语表.md`，并在添加新翻译前先检查是否已有约定俗成的翻译。
++
++---
++
++## 🎉 开始工作
++
++现在你可以：
++
++1. 📖 阅读 `术语表.md` 了解翻译规范
++2. 📋 查看 `中文化实施计划.md` 了解详细计划
++3. 🔨 开始在 Xcode 中集成本地化文件
++4. 💻 修改 Swift 代码使用本地化字符串
++
++祝你中文化工作顺利！🚀
+diff --git a/views/ContentView.swift b/views/ContentView.swift
+index 3728e76..44e7484 100644
+--- a/views/ContentView.swift
++++ b/views/ContentView.swift
+@@ -221,40 +221,40 @@ struct ContentView: View {
+         view
+             // Confirm stopping a running embedded session (place before any .alert modifiers)
+             .confirmationDialog(
+-                "Stop running session?",
++                "dialogs.stopSession.title",
+                 isPresented: Binding<Bool>(
+                     get: { confirmStopState != nil },
+                     set: { if !$0 { confirmStopState = nil } }
+                 ),
+                 titleVisibility: .visible
+             ) {
+-                Button("Stop", role: .destructive) {
++                Button("actions.stop", role: .destructive) {
+                     if let st = confirmStopState {
+                         stopEmbedded(forID: st.sessionId)
+                         confirmStopState = nil
+                     }
+                 }
+-                Button("Cancel", role: .cancel) { confirmStopState = nil }
++                Button("actions.cancel", role: .cancel) { confirmStopState = nil }
+             } message: {
+-                Text("The embedded terminal appears to be running. Stopping now will terminate the current Codex/Claude task.")
++                Text("dialogs.stopSession.message")
+             }
+             .alert(item: $alertState) { state in
+                 Alert(
+                     title: Text(state.title),
+                     message: Text(state.message),
+-                    dismissButton: .default(Text("OK"))
++                    dismissButton: .default(Text("actions.ok"))
+                 )
+             }
+             .alert(
+-                "Delete selected sessions?", isPresented: $deleteConfirmationPresented,
++                "dialogs.deleteSession.title", isPresented: $deleteConfirmationPresented,
+                 presenting: Array(selection)
+             ) { ids in
+-                Button("Cancel", role: .cancel) {}
+-                Button("Move to Trash", role: .destructive) {
++                Button("actions.cancel", role: .cancel) {}
++                Button("actions.moveToTrash", role: .destructive) {
+                     deleteSelections(ids: ids)
+                 }
+             } message: { _ in
+-                Text("Session files will be moved to Trash and can be restored in Finder.")
++                Text("dialogs.deleteSession.message")
+             }
+             .fileImporter(
+                 isPresented: $selectingSessionsRoot,
+@@ -330,7 +330,7 @@ struct ContentView: View {
+             }
+             .buttonStyle(.bordered)
+             .controlSize(.small)
+-            .help("Refresh session index")
++            .help("help.refreshSessionIndex")
+             .disabled(viewModel.isEnriching || viewModel.isLoading)
+         }
+         .padding(.horizontal, 4)
+@@ -446,7 +446,7 @@ struct ContentView: View {
+                             .foregroundStyle(.tertiary)
+                     }
+                     .buttonStyle(.plain)
+-                    .help("Rename / Add Comment")
++                    .help("help.renameAddComment")
+                 }
+                 .frame(maxWidth: .infinity, alignment: .leading)
+             }
+@@ -464,7 +464,7 @@ struct ContentView: View {
+                         Button {
+                             showNewWithContext = true
+                         } label: {
+-                            Label("New With Context…", systemImage: "text.append")
++                            Label("actions.newWithContext", systemImage: "text.append")
+                         }
+ 
+                         let providers = viewModel.allowedSources(for: focused)
+@@ -478,28 +478,28 @@ struct ContentView: View {
+                                         launchNewSession(
+                                             for: current, using: sessionSource, style: .preferred)
+                                     } label: {
+-                                        Label("Use Preferred Launch", systemImage: "gearshape")
++                                        Label("actions.usePreferredLaunch", systemImage: "gearshape")
+                                     }
+                                     Button {
+                                         guard let current = focusedSummary else { return }
+                                         launchNewSession(
+                                             for: current, using: sessionSource, style: .terminal)
+                                     } label: {
+-                                        Label("Open in Terminal", systemImage: "terminal")
++                                        Label("actions.openInTerminal", systemImage: "terminal")
+                                     }
+                                     Button {
+                                         guard let current = focusedSummary else { return }
+                                         launchNewSession(
+                                             for: current, using: sessionSource, style: .iterm)
+                                     } label: {
+-                                        Label("Open in iTerm2", systemImage: "app.fill")
++                                        Label("actions.openInIterm2", systemImage: "app.fill")
+                                     }
+                                     Button {
+                                         guard let current = focusedSummary else { return }
+                                         launchNewSession(
+                                             for: current, using: sessionSource, style: .warp)
+                                     } label: {
+-                                        Label("Open in Warp", systemImage: "app.gift.fill")
++                                        Label("actions.openInWarp", systemImage: "app.gift.fill")
+                                     }
+                                     if viewModel.preferences.defaultResumeUseEmbeddedTerminal {
+                                         Button {
+@@ -509,7 +509,7 @@ struct ContentView: View {
+                                             )
+                                         } label: {
+                                             Label(
+-                                                "Open Embedded Terminal",
++                                                "actions.openEmbeddedTerminal",
+                                                 systemImage: "rectangle.badge.plus")
+                                         }
+                                     }
+@@ -519,7 +519,7 @@ struct ContentView: View {
+                             }
+                         }
+                     } else {
+-                        Text("Select a session to start a new conversation")
++                        Text("placeholder.selectSessionForNew")
+                     }
+                 } label: {
+                     if let focused {

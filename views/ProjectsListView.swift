@@ -20,7 +20,7 @@ struct ProjectsListView: View {
 
         return List(selection: selectionBinding) {
             if tree.isEmpty {
-                ContentUnavailableView("No Projects", systemImage: "square.grid.2x2")
+                ContentUnavailableView("status.noProjects", systemImage: "square.grid.2x2")
             } else {
                 OutlineGroup(tree, children: \.children) { node in
                     let p = node.project
@@ -41,13 +41,13 @@ struct ProjectsListView: View {
                     .onTapGesture { viewModel.setSelectedProject(p.id) }
                     .contextMenu {
                         Button { viewModel.newSession(project: p) } label: {
-                            Label("New Session", systemImage: "plus")
+                            Label("actions.new", systemImage: "plus")
                         }
                         Button {
                             newParentProject = p
                             showNewProject = true
                         } label: {
-                            Label("New Subproject", systemImage: "plus.square.on.square")
+                            Label("actions.newSubproject", systemImage: "plus.square.on.square")
                         }
                         Divider()
 
@@ -69,19 +69,19 @@ struct ProjectsListView: View {
                                 .disabled(!editor.isInstalled)
                             }
                         } label: {
-                            Label("Open in", systemImage: "arrow.up.forward.app")
+                            Label("actions.openIn", systemImage: "arrow.up.forward.app")
                         }
                         .disabled(p.directory == nil || p.directory?.isEmpty == true)
 
                         Button {
                             viewModel.revealProjectDirectory(p)
                         } label: {
-                            Label("Reveal in Finder", systemImage: "folder")
+                            Label("actions.revealInFinder", systemImage: "folder")
                         }
                         .disabled(p.directory == nil || p.directory?.isEmpty == true)
 
                         Button { editingProject = p; showEdit = true } label: {
-                            Label("Edit Project / Property", systemImage: "pencil")
+                            Label("actions.editProject", systemImage: "pencil")
                         }
                         Divider()
                         Button(role: .destructive) {
@@ -89,7 +89,7 @@ struct ProjectsListView: View {
                             pendingDelete = p
                             showDeleteConfirm = true
                         } label: {
-                            Label("Delete Project", systemImage: "trash")
+                            Label("actions.deleteProject", systemImage: "trash")
                         }
                     }
                     .dropDestination(for: String.self) { items, _ in

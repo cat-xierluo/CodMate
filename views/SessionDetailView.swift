@@ -67,23 +67,23 @@ struct SessionDetailView: View {
                 ], spacing: 12
             ) {
                 infoRow(
-                    title: "STARTED",
+                    title: "sessionInfo.started",
                     value: summary.startedAt.formatted(date: .numeric, time: .shortened),
                     icon: "calendar")
-                infoRow(title: "DURATION", value: summary.readableDuration, icon: "clock")
+                infoRow(title: "sessionInfo.duration", value: summary.readableDuration, icon: "clock")
 
                 if let model = summary.displayModel ?? summary.model {
-                    infoRow(title: "MODEL", value: model, icon: "cpu")
+                    infoRow(title: "sessionInfo.model", value: model, icon: "cpu")
                 }
                 if let approval = summary.approvalPolicy {
-                    infoRow(title: "APPROVAL", value: approval, icon: "checkmark.shield")
+                    infoRow(title: "sessionInfo.approval", value: approval, icon: "checkmark.shield")
                 }
 
-                infoRow(title: "CLI VERSION", value: summary.cliVersion, icon: "terminal")
-                infoRow(title: "ORIGINATOR", value: summary.originator, icon: "person.circle")
+                infoRow(title: "sessionInfo.cliVersion", value: summary.cliVersion, icon: "terminal")
+                infoRow(title: "sessionInfo.originator", value: summary.originator, icon: "person.circle")
 
-                infoRow(title: "WORKING DIRECTORY", value: summary.cwd, icon: "folder")
-                infoRow(title: "FILE SIZE", value: summary.fileSizeDisplay, icon: "externaldrive")
+                infoRow(title: "sessionInfo.workingDirectory", value: summary.cwd, icon: "folder")
+                infoRow(title: "sessionInfo.fileSize", value: summary.fileSizeDisplay, icon: "externaldrive")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

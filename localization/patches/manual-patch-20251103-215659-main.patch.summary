@@ -1,0 +1,33 @@
+CodMate 本地化补丁
+
+生成时间: 2025-11-03 21:56:59
+起始提交: HEAD
+当前分支: main
+
+更改统计:
+ 18 files changed, 4322 insertions(+), 18 deletions(-)
+
+包含的文件:
+  - localization/PATCH-MANAGEMENT.md
+  - localization/SYNC-WORKFLOW.md
+  - localization/check-conflicts.sh
+  - localization/generate-patch.sh
+  - localization/localization-keys.json
+  - localization/patch-template.diff
+  - localization/sync-upstream.sh
+  - localization/zh-Hans/Localizable.strings
+  - localization/zh-Hans/Models/SessionSummary.strings
+  - localization/zh-Hans/README.md
+  - "localization/zh-Hans/Views/ContentView-\351\224\256\345\220\215\346\230\240\345\260\204.md"
+  - localization/zh-Hans/Views/ContentView.strings
+  - localization/zh-Hans/Views/SettingsView.strings
+  - "localization/zh-Hans/\344\270\255\346\226\207\345\214\226\345\256\236\346\226\275\350\256\241\345\210\222.md"
+  - "localization/zh-Hans/\346\234\257\350\257\255\350\241\250.md"
+  - "localization/zh-Hans/\351\224\231\350\257\257\345\222\214\346\217\220\347\244\272.md"
+  - "localization/\345\277\253\351\200\237\345\274\200\345\247\213.md"
+  - views/ContentView.swift
+
+说明:
+此补丁包含 CodMate 项目的中文本地化修改。
+应用此补丁前，请确保已备份当前代码。
+

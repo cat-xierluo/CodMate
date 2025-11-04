@@ -35,6 +35,14 @@
 "actions.confirm" = "确认";
 "actions.copy" = "复制";
 "actions.paste" = "粘贴";
+"actions.editTitleComment" = "编辑标题和评论";
+"actions.newProject" = "新建项目…";
+"actions.assignToProject" = "分配到项目…";
+"actions.deleteSession" = "删除会话";
+"actions.newSubproject" = "新建子项目";
+"actions.openIn" = "打开于";
+"actions.editProject" = "编辑项目/属性";
+"actions.deleteProject" = "删除项目";
 
 // ========== 对话框 ==========
 "dialogs.stopSession.title" = "停止运行中的会话？";
@@ -174,6 +182,7 @@
 "status.noMCPServersHint" = "点击添加以导入服务器。";
 "status.failedChooseDirectory" = "选择目录失败";
 "status.failedChooseCLI" = "选择 CLI 失败";
+"status.scanning" = "扫描中…";
 
 // ========== 标题 ==========
 "title.settings" = "设置";
