@@ -1,0 +1,84 @@
+/* ContentView 相关字符串 */
+
+/* ========== 基础动作 ========== */
+"actions.ok" = "确定";
+"actions.cancel" = "取消";
+"actions.stop" = "停止";
+"actions.delete" = "删除";
+"actions.moveToTrash" = "移动到废纸篓";
+"actions.new" = "新建";
+"actions.newWithContext" = "基于上下文新建…";
+"actions.resume" = "继续";
+"actions.openInTerminal" = "在终端中打开";
+"actions.openInIterm2" = "在 iTerm2 中打开";
+"actions.openInWarp" = "在 Warp 中打开";
+"actions.openEmbeddedTerminal" = "打开嵌入式终端";
+"actions.usePreferredLaunch" = "使用首选启动方式";
+
+/* ========== 对话框 ========== */
+"dialogs.stopSession.title" = "停止运行中的会话？";
+"dialogs.stopSession.message" = "嵌入式终端似乎正在运行。现在停止将终止当前的 Codex/Claude 任务。";
+"dialogs.deleteSession.title" = "删除选中的会话？";
+"dialogs.deleteSession.message" = "会话文件将被移动到废纸篓，可以在 Finder 中恢复。";
+"dialogs.deletePrompt.title" = "删除提示";
+"dialogs.deletePrompt.message" = "删除 \"%@\"？此操作无法撤销。";
+
+/* ========== 帮助文本 ========== */
+"help.refreshSessionIndex" = "刷新会话索引";
+"help.renameAddComment" = "重命名/添加评论";
+"help.revealInFinder" = "在 Finder 中显示";
+"help.returnToHistory" = "返回历史记录";
+"help.exportMarkdown" = "导出 Markdown";
+"help.delete" = "删除";
+
+/* ========== 占位符 ========== */
+"placeholder.selectSession" = "选择一个会话";
+"placeholder.selectSessionForNew" = "选择一个会话以开始新对话";
+"placeholder.selectSessionForResume" = "选择一个会话以继续";
+"placeholder.pickSessionDetails" = "从中间列表中选择一个会话以查看详情。";
+
+/* ========== 状态文本 ========== */
+"status.newSession" = "新会话";
+"status.appearsAfterFirstMessage" = "发送第一条消息后出现在列表中";
+"status.noMatches" = "无匹配项";
+"status.showingFirstResults" = "显示前 %d 个结果 — 优化搜索以查看更多";
+
+/* ========== 标题 ========== */
+"title.presetCommands" = "预设命令";
+
+/* ========== 通知 ========== */
+"notification.commandCopied" = "命令已复制。粘贴到打开的终端中。";
+
+/* ========== 错误消息 ========== */
+"error.operationFailed" = "操作失败";
+"error.failedChooseDirectory" = "选择目录失败";
+
+/* ========== 应用信息 ========== */
+"app.name" = "CodMate";
+
+/* ========== 主界面 ========== */
+"Select a session" = "选择一个会话";
+"Pick a session from the middle list to view details" = "从中间列表选择一个会话以查看详情";
+
+/* ========== 菜单操作（保留兼容性） ========== */
+"Open in Terminal" = "在终端中打开";
+"Open in iTerm2 (Direct)" = "在 iTerm2 中打开（直接）";
+"Open in Warp (Path)" = "在 Warp 中打开（路径）";
+"Open Embedded Terminal (Alpha)" = "打开嵌入式终端（测试版）";
+"Resume and more options" = "继续执行及更多选项";
+"Refresh session index" = "刷新会话索引";
+"Reveal in Finder" = "在 Finder 中显示";
+"Return to history" = "返回历史";
+"Copy real resume command" = "复制真实恢复命令";
+"Delete" = "删除";
+
+/* ========== 操作反馈 ========== */
+"Real command copied" = "实命令已复制";
+"Command copied. Paste it in the opened terminal." = "命令已复制。粘贴到打开的终端中。";
+
+/* ========== 导出功能 ========== */
+"Export Markdown" = "导出 Markdown";
+
+/* ========== 状态提示 ========== */
+"New With Context…" = "基于上下文新建…";
+"Start a new Codex session (use project profile when available)" = "开始新的 Codex 会话（可用时使用项目配置）";

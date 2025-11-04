@@ -1,0 +1,51 @@
+/* SettingsView 相关字符串 */
+
+/* 页面标题 */
+"Settings" = "设置";
+"General Settings" = "通用设置";
+"Terminal Settings" = "终端设置";
+"Command Settings" = "命令设置";
+"Codex Settings" = "Codex 设置";
+"Dialectics" = "辩证法";
+"MCP Server" = "MCP 服务器";
+"About" = "关于";
+
+/* 通用设置说明 */
+"Configure basic application settings and file paths" = "配置基本应用程序设置和文件路径";
+
+/* 文件路径设置 */
+"File Paths" = "文件路径";
+"Sessions Directory" = "会话目录";
+"Directory where Codex session files are stored" = "存储 Codex 会话文件的目录";
+"Notes Directory" = "笔记目录";
+"Where session titles and comments are saved" = "保存会话标题和注释的位置";
+"Codex CLI Path" = "Codex CLI 路径";
+"Path to the codex executable" = "codex 可执行文件的路径";
+"Change…" = "更改…";
+
+/* 终端设置 */
+"Configure default terminal application and embedded terminal behavior" = "配置默认终端应用程序和嵌入式终端行为";
+
+/* 命令设置 */
+"Customize command execution behavior and approval policies" = "自定义命令执行行为和审批策略";
+
+/* Codex 设置说明 */
+"Centralize Codex CLI configuration: providers, notifications, privacy, and profiles" = "集中管理 Codex CLI 配置：提供商、通知、隐私和配置文件";
+
+/* 选择器 */
+"(none)" = "（无）";
+"trusted" = "信任";
+"untrusted" = "不信任";
+"parent" = "父级";
+
+/* 关于页面 */
+"About CodMate" = "关于 CodMate";
+"Version" = "版本";
+"Build" = "构建号";
+"Copyright" = "版权所有";
+"Licenses" = "许可证";
+"Open Source Licenses" = "开源许可证";
+
+/* 错误消息 */
+"Failed to choose directory" = "选择目录失败";
+"Failed to choose CLI" = "选择 CLI 失败";

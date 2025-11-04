@@ -1,0 +1,39 @@
+/* SessionSummary 模型相关字符串 */
+
+/* 会话状态 */
+"Active" = "活跃";
+"Completed" = "已完成";
+"Failed" = "失败";
+"Running" = "运行中";
+"Idle" = "空闲";
+"Updating" = "更新中";
+"Enriching" = "丰富化中";
+"Awaiting Follow-up" = "等待后续";
+"Live Activity" = "活跃状态";
+
+/* 会话类型 */
+"Session" = "会话";
+"Codex Session" = "Codex 会话";
+"Claude Session" = "Claude 会话";
+"Gemini Session" = "Gemini 会话";
+
+/* 时间相关 */
+"Started" = "开始时间";
+"Last Updated" = "最后更新";
+"Duration" = "持续时间";
+"Active Duration" = "活跃时长";
+
+/* 元数据 */
+"Model" = "模型";
+"Approval Policy" = "审批策略";
+"Comment" = "注释";
+"Title" = "标题";
+"Description" = "描述";
+"Status" = "状态";
+
+/* 消息计数 */
+"Messages" = "消息数";
+"Turns" = "轮数";
+"Events" = "事件数";
+"Total" = "总计";
+"Visible" = "可见";

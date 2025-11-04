@@ -1,0 +1,295 @@
+--- a/Sources/CodMate/Views/ContentView.swift
++++ b/Sources/CodMate/Views/ContentView.swift
+@@ -231,7 +231,7 @@ struct ContentView: View {
+                     Button(role: .cancel) {
+                         confirmStopState = nil
+                     } label: {
+-                        Text("Cancel")
++                        Text("actions.cancel")
+                     }
+
+                     Button {
+@@ -245,7 +245,7 @@ struct ContentView: View {
+             Alert(
+                 title: Text(state.title),
+                 message: Text(state.message),
+-                dismissButton: .default(Text("OK"))
++                dismissButton: .default(Text("actions.ok"))
+             )
+         }
+         .alert(
+@@ -249,7 +249,7 @@ struct ContentView: View {
+             Button("Cancel", role: .cancel) {}
+             Button("Move to Trash", role: .destructive) {
+                 deleteSelections(ids: ids)
+-            }
++            }.keyboardShortcut(.defaultAction)
+         } message: { _ in
+             Text("Session files will be moved to Trash and can be restored in Finder.")
+         }
+@@ -333,7 +333,7 @@ struct ContentView: View {
+             } label: {
+                 if viewModel.isEnriching {
+                     ProgressView()
+                         .progressViewStyle(.circular)
+-                        .controlSize(.small)
++                        .controlSize(.small)
+                         .frame(width: 16, height: 16)
+                 } else {
+                     Image(systemName: "arrow.clockwise")
+@@ -168,7 +168,7 @@ struct ContentView: View {
+                         .font(.system(size: 16, weight: .medium))
+                 }
+             }
+-            .buttonStyle(.bordered)
++            .buttonStyle(.bordered)
+             .controlSize(.small)
+             .help("Refresh session index")
+             .disabled(viewModel.isEnriching || viewModel.isLoading)
+@@ -430,7 +430,7 @@ struct ContentView: View {
+
+             // 新建会话入口
+-            Button("New Session", action: startNewSession)
++            Button("actions.new", action: startNewSession)
+                 .keyboardShortcut(.command, .shift, "N")
+                 .help("Appears in list after first message")
+
+--- a/Sources/CodMate/Views/SettingsView.swift
++++ b/Sources/CodMate/Views/SettingsView.swift
+@@ -28,7 +28,7 @@ struct SettingsView: View {
+     var body: some View {
+         ZStack(alignment: .topLeading) {
+             // 隐藏的视图用于窗口配置
+-            WindowConfigurator { window in
++            WindowConfigurator { window in
+                 window.isMovableByWindowBackground = true
+             }
+             .frame(width: 0, height: 0)
+@@ -145,7 +145,7 @@ struct SettingsView: View {
+
+             ScrollView {
+                 VStack(alignment: .leading, spacing: 20) {
+                     VStack(alignment: .leading, spacing: 6) {
+-                        Text("General Settings")
++                        Text("settings.general.title")
+                             .font(.title2)
+                             .fontWeight(.bold)
+-                        Text("Configure basic application settings and file paths")
++                        Text("settings.general.description")
+                             .font(.subheadline)
+                             .foregroundColor(.secondary)
+                     }
+@@ -154,7 +154,7 @@ struct SettingsView: View {
+                         .font(.headline)
+                         .foregroundColor(.primary)
+
+-                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
++                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
+                         GridRow {
+                             VStack(alignment: .leading, spacing: 4) {
+                                 Label("Sessions Directory", systemImage: "folder")
+@@ -513,7 +513,7 @@ struct SettingsView: View {
+         VStack(alignment: .leading, spacing: 12) {
+             VStack(alignment: .leading, spacing: 6) {
+-                Text("About CodMate")
++                Text("about.title")
+                     .font(.title2)
+                     .fontWeight(.bold)
+-                Text("Build information and project links")
++                Text("about.description")
+                     .font(.subheadline)
+                     .foregroundColor(.secondary)
+             }
+@@ -521,12 +521,12 @@ struct SettingsView: View {
+             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
+                 GridRow {
+-                    Text("Version")
++                    Text("about.version")
+                         .font(.subheadline)
+                         .fontWeight(.medium)
+                         .foregroundColor(.primary)
+-                    Text("about.version")
++                    Text("about.version.value")
+                         .lineLimit(1)
+                         .truncationMode(.middle)
+                         .frame(maxWidth: .infinity, alignment: .trailing)
+@@ -534,12 +534,12 @@ struct SettingsView: View {
+
+                 GridRow {
+-                    Text("Build Timestamp")
++                    Text("about.buildTimestamp")
+                         .font(.subheadline)
+                         .fontWeight(.medium)
+                         .foregroundColor(.primary)
+-                    Text("about.buildTimestamp")
++                    Text("about.buildTimestamp.value")
+                         .lineLimit(1)
+                         .truncationMode(.middle)
+                         .frame(maxWidth: .infinity, alignment: .trailing)
+@@ -547,12 +547,12 @@ struct SettingsView: View {
+
+                 GridRow {
+-                    Text("Latest Release")
++                    Text("about.latestRelease")
+                         .font(.subheadline)
+                         .fontWeight(.medium)
+                         .foregroundColor(.primary)
+-                    Text("about.latestRelease")
++                    Text("about.latestRelease.value")
+                         .lineLimit(1)
+                         .truncationMode(.middle)
+                         .frame(maxWidth: .infinity, alignment: .trailing)
+@@ -560,12 +560,12 @@ struct SettingsView: View {
+
+                 GridRow {
+-                    Text("Project URL")
++                    Text("about.projectURL")
+                         .font(.subheadline)
+                         .fontWeight(.medium)
+                         .foregroundColor(.primary)
+-                    Text("about.projectURL")
++                    Text("about.projectURL.value")
+                         .lineLimit(1)
+                         .truncationMode(.middle)
+                         .frame(maxWidth: .infinity, alignment: .trailing)
+@@ -573,12 +573,12 @@ struct SettingsView: View {
+
+                 GridRow {
+-                    Text("Repository")
++                    Text("about.repository")
+                         .font(.subheadline)
+                         .fontWeight(.medium)
+                         .foregroundColor(.primary)
+-                    Text("about.repository")
++                    Text("about.repository.value")
+                         .lineLimit(1)
+                         .truncationMode(.middle)
+                         .frame(maxWidth: .infinity, alignment: .trailing)
+@@ -586,12 +586,12 @@ struct SettingsView: View {
+
+                 GridRow {
+-                    Text("Open Source Licenses")
++                    Text("about.licenses")
+                         .font(.subheadline)
+                         .fontWeight(.medium)
+                         .foregroundColor(.primary)
+-                    Button("View…") {
++                    Button("actions.view") {
+                         showLicensesSheet = true
+                     }
+                     .buttonStyle(.borderless)
+@@ -604,7 +604,7 @@ struct SettingsView: View {
+
+     private var placeholder: some View {
+         ContentUnavailableView(
+-            "Select a session", systemImage: "rectangle.and.text.magnifyingglass",
+-            description: Text("Pick a session from the middle list to view details.")
++            "placeholder.selectSession", systemImage: "rectangle.and.text.magnifyingglass",
++            description: Text("placeholder.pickSessionDetails")
+         )
+         .frame(maxWidth: .infinity, maxHeight: .infinity)
+     }
+--- a/localization/zh-Hans/Localizable.strings
++++ b/localization/zh-Hans/Localizable.strings
+@@ -1,6 +1,26 @@
+ /* ContentView 相关字符串 */
+
++/* 基础操作 */
++"actions.ok" = "确定";
++"actions.cancel" = "取消";
++"actions.save" = "保存";
++"actions.delete" = "删除";
++"actions.refresh" = "刷新";
++"actions.new" = "新建";
++"actions.view" = "查看";
++"actions.change" = "更改";
++"actions.restoreDefaults" = "恢复默认";
++
++/* 状态提示 */
++"status.loading" = "加载中";
++"status.saving" = "保存中";
++"status.processing" = "处理中";
++
++/* 占位符 */
++"placeholder.selectSession" = "选择一个会话";
++"placeholder.pickSessionDetails" = "从中间列表选择一个会话以查看详情";
++
+ /* 主界面 */
+ "Select a session" = "选择一个会话";
+ "Pick a session from the middle list to view details" = "从中间列表选择一个会话以查看详情";
+
+@@ -10,6 +30,8 @@
+
+ /* 工具提示 */
+ "Refresh session index" = "刷新会话索引";
++"help.refreshSessionIndex" = "刷新会话索引";
++"help.rename" = "重命名/添加评论";
+
+ /* 设置页面 */
+ "Settings" = "设置";
+ "General Settings" = "通用设置";
+ "General Settings" = "通用设置";
+ "Terminal Settings" = "终端设置";
+ "Command Settings" = "命令设置";
+ "Codex Settings" = "Codex 设置";
+@@ -60,3 +62,56 @@
+ /* 错误消息 */
+ "Failed to choose directory" = "选择目录失败";
+ "Failed to choose CLI" = "选择 CLI 失败";
++
++/* 关于页面 */
++"about.title" = "关于 CodMate";
++"about.description" = "构建信息和项目链接";
++"about.version" = "版本";
++"about.version.value" = "1.0.0";
++"about.buildTimestamp" = "构建时间戳";
++"about.buildTimestamp.value" = "2025-11-03";
++"about.latestRelease" = "最新版本";
++"about.latestRelease.value" = "v0.1.8";
++"about.projectURL" = "项目网址";
++"about.projectURL.value" = "https://github.com/cat-xierluo/CodMate";
++"about.repository" = "代码仓库";
++"about.repository.value" = "https://github.com/loocor/codmate";
++"about.licenses" = "开源许可证";
++
++/* 帮助提示 */
++"help.rename" = "重命名/添加评论";
++"help.refreshSessionIndex" = "刷新会话索引";
++
++/* 标签 */
++"labels.projects" = "项目";
++"labels.sessions" = "会话";
++"labels.conversation" = "对话";
++"labels.environmentContext" = "环境上下文";
++"labels.taskInstructions" = "任务指令";
++"labels.model" = "模型";
++"labels.started" = "开始时间";
++"labels.duration" = "持续时间";
++"labels.workingDirectory" = "工作目录";
++"labels.fileSize" = "文件大小";
++"labels.changes" = "更改";
++"labels.models" = "模型";
++
++/* 会话信息 */
++"sessionInfo.started" = "开始";
++"sessionInfo.duration" = "持续时间";
++"sessionInfo.model" = "模型";
++"sessionInfo.approval" = "审批";
++"sessionInfo.cliVersion" = "CLI 版本";
++"sessionInfo.originator" = "创建者";
++"sessionInfo.workingDirectory" = "工作目录";
++"sessionInfo.fileSize" = "文件大小";
++
++/* 状态 */
++"status.noSessions" = "无会话";
++"status.noSessionsHint" = "调整目录或启动 Codex CLI 以生成新的会话日志。";
++"status.noProjects" = "无项目";
++"status.noMessages" = "无消息";
++"status.noMatches" = "无匹配项";
++"status.parsing" = "解析中...";
++"status.detectedServers" = "检测到: %d 个服务器";
++"status.showingResults" = "显示前 %d 个结果 — 优化搜索以查看更多";
++
++/* 排序 */
++"sort.oldestFirst" = "从旧到新";
++"sort.newestFirst" = "从新到旧";

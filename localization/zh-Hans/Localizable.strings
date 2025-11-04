@@ -1,0 +1,357 @@
+/*
+//  CodMate Chinese Localization
+//  Simplified Chinese (zh-Hans)
+//  Created: 2025-11-03
+*/
+
+// ========== 基础动作 ==========
+"actions.ok" = "确定";
+"actions.cancel" = "取消";
+"actions.stop" = "停止";
+"actions.delete" = "删除";
+"actions.moveToTrash" = "移动到废纸篓";
+"actions.save" = "保存";
+"actions.edit" = "编辑";
+"actions.refresh" = "刷新";
+"actions.new" = "新建";
+"actions.resume" = "继续";
+"actions.openInTerminal" = "在终端中打开";
+"actions.openInIterm2" = "在 iTerm2 中打开";
+"actions.openInWarp" = "在 Warp 中打开";
+"actions.openEmbeddedTerminal" = "打开嵌入式终端";
+"actions.usePreferredLaunch" = "使用首选启动方式";
+"actions.change" = "更改…";
+"actions.restoreDefaults" = "恢复默认";
+"actions.view" = "查看…";
+"actions.select" = "选择";
+"actions.add" = "添加";
+"actions.remove" = "移除";
+"actions.test" = "测试";
+"actions.close" = "关闭";
+"actions.newWithContext" = "基于上下文新建…";
+"actions.viewLicenses" = "查看许可证";
+"actions.apply" = "应用";
+"actions.discard" = "丢弃";
+"actions.confirm" = "确认";
+"actions.copy" = "复制";
+"actions.paste" = "粘贴";
+
+// ========== 对话框 ==========
+"dialogs.stopSession.title" = "停止运行中的会话？";
+"dialogs.stopSession.message" = "嵌入式终端似乎正在运行。现在停止将终止当前的 Codex/Claude 任务。";
+"dialogs.deleteSession.title" = "删除选中的会话？";
+"dialogs.deleteSession.message" = "会话文件将被移动到废纸篓，可以在 Finder 中恢复。";
+"dialogs.deletePrompt.title" = "删除提示";
+"dialogs.deletePrompt.message" = "删除 \"%@\"？此操作无法撤销。";
+"dialogs.deleteProvider.title" = "删除提供商";
+"dialogs.deleteProvider.message" = "确定要删除 \"%@\" 吗？此操作无法撤销。";
+"dialogs.deleteProvider.messageDefault" = "确定要删除这个提供商吗？此操作无法撤销。";
+"dialogs.discardChanges.title" = "丢弃更改？";
+"dialogs.discardChanges.message" = "这将永久丢弃 %d 个文件的更改。";
+"dialogs.deleteModels.title" = "删除选中的模型？";
+"dialogs.deleteModels.message" = "此操作无法撤销。";
+"dialogs.deleteProjectAndSubs.title" = "删除项目和子项目？";
+"dialogs.moveSubsToTopLevel" = "将子项目移至顶级";
+"dialogs.importServers.message" = "将 %d 个服务器导入到 CodMate？";
+"dialogs.deleteMCPServer.message" = "确定要删除 \"%@\" 吗？此操作无法撤销。";
+"dialogs.commit.message" = "将为暂存的更改创建提交。";
+"dialogs.selectDirectory" = "选择目录";
+"dialogs.selectFile" = "选择文件";
+
+// ========== 设置页面 ==========
+"settings.title" = "设置";
+"settings.general.title" = "通用设置";
+"settings.general.description" = "配置基本应用程序设置和文件路径";
+"settings.terminal.title" = "终端设置";
+"settings.terminal.description" = "配置终端行为和恢复首选项";
+"settings.command.title" = "命令选项";
+"settings.command.description" = "Codex 命令的默认沙盒和审批策略";
+"settings.providers.title" = "提供商";
+"settings.providers.description" = "管理全局提供商和 Codex/Claude 绑定";
+"settings.mcpServers.title" = "MCP 服务器";
+"settings.mcpServers.description" = "管理 MCP 服务器。通过 Uni-Import 添加或配置能力。";
+"settings.codex.title" = "Codex 设置";
+"settings.codex.description" = "集中管理 Codex CLI 配置：提供商、通知、隐私和配置文件";
+"settings.claude.title" = "Claude 设置";
+"settings.gitReview.title" = "Git 评审";
+"settings.dialectics.title" = "辩证法";
+
+// ========== 设置项目 ==========
+"settings.filePaths.title" = "文件路径";
+"settings.projectsDirectory.label" = "项目目录";
+"settings.projectsDirectory.description" = "CodMate 存储项目数据的目录";
+"settings.notesDirectory.label" = "笔记目录";
+"settings.notesDirectory.description" = "保存会话标题和注释的位置";
+"settings.editor.title" = "编辑器";
+"settings.defaultEditor.label" = "默认编辑器";
+"settings.defaultEditor.description" = "用于评审和其他地方的快速打开操作";
+"settings.timelineMarkdown.title" = "时间线与 Markdown";
+"settings.timelineVisibility.title" = "时间线可见性";
+"settings.timelineVisibility.description" = "选择在对话时间线中显示的消息类型";
+"settings.markdownExport.title" = "Markdown 导出";
+"settings.markdownExport.description" = "选择导出 Markdown 时包含的消息类型";
+"settings.resumeDefaults.title" = "恢复默认";
+"settings.runEmbeddedTerminal.label" = "在嵌入式终端中运行";
+"settings.runEmbeddedTerminal.description" = "使用内置终端而非外部终端";
+"settings.copyCommands.label" = "复制恢复命令到剪贴板";
+"settings.copyCommands.description" = "恢复时自动复制恢复命令";
+"settings.openExternalTerminal.label" = "打开外部终端";
+"settings.openExternalTerminal.description" = "为外部会话选择终端应用程序";
+"settings.sandboxPolicy.label" = "沙盒策略 (-s, --sandbox)";
+"settings.sandboxPolicy.description" = "生成命令的文件系统访问级别";
+"settings.approvalPolicy.label" = "审批策略 (-a, --ask-for-approval)";
+"settings.approvalPolicy.description" = "何时需要人工确认";
+"settings.fullAuto.label" = "启用全自动 (--full-auto)";
+"settings.fullAuto.description" = "on-failure 审批与 workspace-write 沙盒的别名";
+"settings.bypassApprovals.label" = "绕过审批和沙盒";
+"settings.bypassApprovals.description" = "--dangerously-bypass-approvals-and-sandbox（慎用）";
+"settings.activeProvider.label" = "活跃提供商";
+"settings.defaultModel.label" = "默认模型";
+"settings.wireAPI.label" = "Wire API";
+"settings.wireAPI.description" = "Codex CLI 的协议";
+
+// ========== 帮助文本 ==========
+"help.refreshSessionIndex" = "刷新会话索引";
+"help.renameAddComment" = "重命名/添加评论";
+"help.revealInFinder" = "在 Finder 中显示";
+"help.returnToHistory" = "返回历史记录";
+"help.exportMarkdown" = "导出 Markdown";
+"help.delete" = "删除";
+"help.startNewSession" = "开始新的 %@ 会话";
+"help.selectSessionToStart" = "选择一个会话以开始新对话";
+"help.selectSessionForNew" = "选择一个会话以开始新对话";
+"help.selectSessionForResume" = "选择一个会话以继续";
+"help.toggleReviewMode" = "切换评审模式";
+"help.insertPresetCommand" = "插入预设命令…";
+"help.managePrompts" = "管理提示";
+"help.deletePrompt" = "删除提示";
+"help.restoreView" = "恢复视图";
+"help.maximizeTerminal" = "最大化终端";
+"help.reloadSessionFile" = "从此会话文件重新加载最新记录";
+"help.restoreLayout" = "恢复布局";
+"help.expandConversation" = "展开对话";
+
+// ========== 占位符 ==========
+"placeholder.selectSession" = "选择一个会话";
+"placeholder.selectSessionForNew" = "选择一个会话以开始新对话";
+"placeholder.selectSessionForResume" = "选择一个会话以继续";
+"placeholder.pickSessionDetails" = "从中间列表中选择一个会话以查看详情。";
+"placeholder.search" = "搜索";
+"placeholder.searchTitleComment" = "搜索标题或注释";
+"placeholder.searchPrompts" = "搜索提示";
+"placeholder.filterConversation" = "在对话中筛选";
+"placeholder.nameOptional" = "名称（可选）";
+"placeholder.commentOptional" = "注释（可选）";
+"placeholder.providerName" = "提供商名称";
+"placeholder.codexBaseURL" = "https://api.example.com/v1";
+"placeholder.apiKeyEnv" = "OPENAI_API_KEY";
+"placeholder.vendorModelId" = "供应商模型 ID";
+"placeholder.pasteJSON" = "粘贴或拖放 JSON/TOML 负载以暂存 MCP 服务器。";
+"placeholder.dropFilesHere" = "在此处拖放文本文件或代码片段";
+"placeholder.url" = "https://…";
+"placeholder.command" = "/usr/local/bin/mcp-server";
+"placeholder.maxMessageSize" = "最大消息大小（KB）";
+
+// ========== 状态文本 ==========
+"status.newSession" = "新会话";
+"status.appearsAfterFirstMessage" = "发送第一条消息后出现在列表中";
+"status.noMatches" = "无匹配项";
+"status.showingFirstResults" = "显示前 %d 个结果 — 优化搜索以查看更多";
+"status.loading" = "加载中…";
+"status.saving" = "保存中…";
+"status.processing" = "处理中…";
+"status.updating" = "更新中…";
+"status.enriching" = "丰富化中…";
+"status.parsing" = "解析中…";
+"status.detectedServers" = "检测到: %d 个服务器";
+"status.noSessions" = "无会话";
+"status.noSessionsHint" = "调整目录或启动 Codex CLI 以生成新的会话日志。";
+"status.noProjects" = "无项目";
+"status.noMessages" = "无消息";
+"status.noProviders" = "无提供商";
+"status.noProvidersHint" = "点击添加以创建提供商";
+"status.noMCPServers" = "无 MCP 服务器";
+"status.noMCPServersHint" = "点击添加以导入服务器。";
+"status.failedChooseDirectory" = "选择目录失败";
+"status.failedChooseCLI" = "选择 CLI 失败";
+
+// ========== 标题 ==========
+"title.settings" = "设置";
+"title.newProvider" = "新提供商";
+"title.editProvider" = "编辑提供商";
+"title.newMCPServer" = "新建 MCP 服务器";
+"title.mcpmate" = "MCPMate";
+"title.presetCommands" = "预设命令";
+"title.editSession" = "编辑会话";
+"title.changes" = "更改";
+
+// ========== 标签 ==========
+"labels.projects" = "项目";
+"labels.sessions" = "会话";
+"labels.conversation" = "对话";
+"labels.environmentContext" = "环境上下文";
+"labels.taskInstructions" = "任务指令";
+"labels.model" = "模型";
+"labels.started" = "开始时间";
+"labels.duration" = "持续时间";
+"labels.workingDirectory" = "工作目录";
+"labels.fileSize" = "文件大小";
+"labels.changes" = "更改";
+"labels.models" = "模型";
+"labels.codex" = "Codex:";
+"labels.claude" = "Claude:";
+"labels.all" = "全部";
+"labels.stagedChanges" = "暂存的更改 (%d)";
+"labels.changesCount" = "更改 (%d)";
+"labels.commitMessage" = "提交消息:";
+"labels.environmentContext" = "环境上下文";
+"labels.jsonPreview" = "服务器 JSON 预览（只读）";
+
+// ========== 选项 ==========
+"options.chat" = "Chat";
+"options.responses" = "Responses";
+"options.stdio" = "stdio";
+"options.sse" = "sse";
+"options.streamableHttp" = "streamable_http";
+"options.diff" = "差异";
+"options.preview" = "预览";
+"options.oldestFirst" = "从旧到新";
+"options.newestFirst" = "从新到旧";
+
+// ========== 列标题 ==========
+"columns.default" = "默认";
+"columns.modelId" = "模型 ID";
+"columns.reasoning" = "推理";
+"columns.toolUse" = "工具使用";
+"columns.vision" = "视觉";
+"columns.longContext" = "长上下文";
+
+// ========== 字段 ==========
+"fields.name.label" = "名称";
+"fields.name.description" = "在列表中显示的标签。";
+"fields.codexBaseURL.label" = "Codex 基础 URL";
+"fields.codexBaseURL.description" = "OpenAI 兼容的端点";
+"fields.claudeBaseURL.label" = "Claude 基础 URL";
+"fields.claudeBaseURL.description" = "Anthropic 兼容的端点";
+"fields.apiKeyEnv.label" = "API 密钥环境变量";
+"fields.apiKeyEnv.description" = "环境变量名称";
+"fields.wireAPI.label" = "Wire API";
+"fields.wireAPI.description" = "Codex CLI 的协议";
+"fields.url" = "URL";
+"fields.command" = "命令";
+"fields.args" = "参数";
+"fields.env" = "环境变量";
+"fields.headers" = "头部";
+
+// ========== 提供商 ==========
+"providers.k2" = "K2";
+"providers.glm" = "GLM";
+"providers.deepseek" = "DeepSeek";
+"providers.other" = "其他…";
+"providers.activeProvider" = "活跃提供商";
+
+// ========== 会话信息 ==========
+"sessionInfo.started" = "开始";
+"sessionInfo.duration" = "持续时间";
+"sessionInfo.model" = "模型";
+"sessionInfo.approval" = "审批";
+"sessionInfo.cliVersion" = "CLI 版本";
+"sessionInfo.originator" = "创建者";
+"sessionInfo.workingDirectory" = "工作目录";
+"sessionInfo.fileSize" = "文件大小";
+
+// ========== 应用信息 ==========
+"app.name" = "CodMate";
+
+// ========== 通知 ==========
+"notification.commandCopied" = "命令已复制。粘贴到打开的终端中。";
+
+// ========== 错误消息 ==========
+"error.operationFailed" = "操作失败";
+"error.failedChooseDirectory" = "选择目录失败";
+"error.failedChooseCLI" = "选择 CLI 失败";
+"error.embeddedTerminalUnavailable" = "嵌入式终端不可用";
+
+// ========== 关于页面 ==========
+"about.title" = "关于 CodMate";
+"about.description" = "构建信息和项目链接";
+"about.version" = "版本";
+"about.version.value" = "1.0.0";
+"about.buildTimestamp" = "构建时间戳";
+"about.buildTimestamp.value" = "2025-11-03";
+"about.latestRelease" = "最新版本";
+"about.latestRelease.value" = "v0.1.8";
+"about.projectURL" = "项目网址";
+"about.projectURL.value" = "https://github.com/cat-xierluo/CodMate";
+"about.repository" = "代码仓库";
+"about.repository.value" = "https://github.com/loocor/codmate";
+"about.licenses" = "开源许可证";
+"about.mcpmateTagline" = "专为 Codex 工作流程打造的专用 MCP 编排工具。";
+
+// ========== 通用术语 ==========
+"Session" = "会话";
+"Resume" = "继续";
+"Resume and more options" = "继续执行及更多选项";
+"Project" = "项目";
+"Provider" = "提供商";
+"New" = "新建";
+"Refresh" = "刷新";
+"Refresh session index" = "刷新会话索引";
+"Delete" = "删除";
+"Move to Trash" = "移动到废纸篓";
+"Cancel" = "取消";
+"OK" = "确定";
+"Save" = "保存";
+"Open" = "打开";
+"Close" = "关闭";
+"Export" = "导出";
+"Import" = "导入";
+"Copy" = "复制";
+"Paste" = "粘贴";
+"Edit" = "编辑";
+"Rename" = "重命名";
+"Add Comment" = "添加评论";
+"Rename / Add Comment" = "重命名/添加评论";
+"Filter" = "筛选";
+"Search" = "搜索";
+"Name" = "名称";
+"Directory" = "目录";
+"Parent Project" = "父项目";
+"Trust Level" = "信任级别";
+"Description" = "描述";
+"Instructions" = "说明";
+"Status" = "状态";
+"Success" = "成功";
+"Failed" = "失败";
+"Error" = "错误";
+"Warning" = "警告";
+"Tip" = "提示";
+"Settings" = "设置";
+"Preferences" = "首选项";
+"General Settings" = "通用设置";
+"Configure basic application settings and file paths" = "配置基本应用程序设置和文件路径";
+"File Paths" = "文件路径";
+"Terminal Settings" = "终端设置";
+"Command Settings" = "命令设置";
+"Codex Settings" = "Codex 设置";
+"About" = "关于";
+"Sessions Directory" = "会话目录";
+"Directory where Codex session files are stored" = "存储 Codex 会话文件的目录";
+"Notes Directory" = "笔记目录";
+"Where session titles and comments are saved" = "保存会话标题和注释的位置";
+"Codex CLI Path" = "Codex CLI 路径";
+"Path to the codex executable" = "codex 可执行文件的路径";
+"Change…" = "更改…";
+"Operation Failed" = "操作失败";
+"Failed to choose directory" = "选择目录失败";
+"Failed to choose CLI" = "选择 CLI 失败";
+"Embedded terminal unavailable" = "嵌入式终端不可用";
+"Add the SwiftTerm package to enable the in‑app terminal." = "添加 SwiftTerm 包以启用应用内终端。";
+"Preview is off. Copy works; toggle to enable." = "预览已关闭。复制功能正常；切换以启用预览。";
+"Preview will appear here" = "预览将显示在这里";
+"Sessions remain intact. This only removes the project record." = "会话保持完整。这只会移除项目记录。";
+"Edit Session" = "编辑会话";
+"Comment (optional)" = "注释（可选）";
+"Max message size (KB)" = "最大消息大小（KB）";
+"New Session With Context" = "基于上下文新建会话";
+"Tap to view details" = "点击查看详情";

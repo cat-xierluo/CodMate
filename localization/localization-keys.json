@@ -1,0 +1,354 @@
+{
+  "version": "1.0",
+  "description": "CodMate 本地化键名映射表，用于管理所有翻译键的一致性",
+  "categories": {
+    "actions": {
+      "description": "动作相关键名",
+      "keys": {
+        "ok": "actions.ok",
+        "cancel": "actions.cancel",
+        "save": "actions.save",
+        "delete": "actions.delete",
+        "edit": "actions.edit",
+        "refresh": "actions.refresh",
+        "resume": "actions.resume",
+        "new": "actions.new",
+        "newWithContext": "actions.newWithContext",
+        "openInTerminal": "actions.openInTerminal",
+        "openInIterm2": "actions.openInIterm2",
+        "openInWarp": "actions.openInWarp",
+        "revealInFinder": "actions.revealInFinder",
+        "exportMarkdown": "actions.exportMarkdown",
+        "change": "actions.change",
+        "restoreDefaults": "actions.restoreDefaults",
+        "view": "actions.view",
+        "test": "actions.test",
+        "import": "actions.import",
+        "close": "actions.close",
+        "stop": "actions.stop"
+      }
+    },
+    "dialogs": {
+      "description": "对话框相关键名",
+      "keys": {
+        "deleteSession": {
+          "title": "dialogs.deleteSession.title",
+          "message": "dialogs.deleteSession.message"
+        },
+        "stopSession": {
+          "title": "dialogs.stopSession.title",
+          "message": "dialogs.stopSession.message"
+        },
+        "deletePrompt": {
+          "title": "dialogs.deletePrompt.title",
+          "message": "dialogs.deletePrompt.message"
+        },
+        "deleteProvider": {
+          "title": "dialogs.deleteProvider.title",
+          "message": "dialogs.deleteProvider.message"
+        },
+        "discardChanges": {
+          "title": "dialogs.discardChanges.title",
+          "message": "dialogs.discardChanges.message"
+        }
+      }
+    },
+    "settings": {
+      "description": "设置相关键名",
+      "keys": {
+        "title": "settings.title",
+        "general": {
+          "title": "settings.general.title",
+          "description": "settings.general.description"
+        },
+        "terminal": {
+          "title": "settings.terminal.title",
+          "description": "settings.terminal.description"
+        },
+        "commandOptions": {
+          "title": "settings.commandOptions.title",
+          "description": "settings.commandOptions.description"
+        },
+        "codex": {
+          "title": "settings.codex.title",
+          "description": "settings.codex.description"
+        },
+        "providers": {
+          "title": "settings.providers.title",
+          "description": "settings.providers.description"
+        },
+        "mcpServers": {
+          "title": "settings.mcpServers.title",
+          "description": "settings.mcpServers.description"
+        },
+        "filePaths": {
+          "title": "settings.filePaths.title"
+        },
+        "sessionsDirectory": {
+          "label": "settings.sessionsDirectory.label",
+          "description": "settings.sessionsDirectory.description"
+        },
+        "notesDirectory": {
+          "label": "settings.notesDirectory.label",
+          "description": "settings.notesDirectory.description"
+        },
+        "codexCliPath": {
+          "label": "settings.codexCliPath.label",
+          "description": "settings.codexCliPath.description"
+        },
+        "runEmbeddedTerminal": {
+          "label": "settings.runEmbeddedTerminal.label",
+          "description": "settings.runEmbeddedTerminal.description"
+        },
+        "copyCommands": {
+          "label": "settings.copyCommands.label",
+          "description": "settings.copyCommands.description"
+        },
+        "openExternalTerminal": {
+          "label": "settings.openExternalTerminal.label",
+          "description": "settings.openExternalTerminal.description"
+        },
+        "sandboxPolicy": {
+          "label": "settings.sandboxPolicy.label",
+          "description": "settings.sandboxPolicy.description"
+        },
+        "approvalPolicy": {
+          "label": "settings.approvalPolicy.label",
+          "description": "settings.approvalPolicy.description"
+        }
+      }
+    },
+    "labels": {
+      "description": "标签相关键名",
+      "keys": {
+        "projects": "labels.projects",
+        "sessions": "labels.sessions",
+        "conversation": "labels.conversation",
+        "environmentContext": "labels.environmentContext",
+        "taskInstructions": "labels.taskInstructions",
+        "model": "labels.model",
+        "started": "labels.started",
+        "duration": "labels.duration",
+        "workingDirectory": "labels.workingDirectory",
+        "fileSize": "labels.fileSize",
+        "changes": "labels.changes",
+        "models": "labels.models"
+      }
+    },
+    "placeholders": {
+      "description": "占位符相关键名",
+      "keys": {
+        "search": "placeholder.search",
+        "searchTitleComment": "placeholder.searchTitleComment",
+        "searchPrompts": "placeholder.searchPrompts",
+        "filterConversation": "placeholder.filterConversation",
+        "nameOptional": "placeholder.nameOptional",
+        "commentOptional": "placeholder.commentOptional",
+        "providerName": "placeholder.providerName",
+        "codexBaseURL": "placeholder.codexBaseURL",
+        "apiKeyEnv": "placeholder.apiKeyEnv",
+        "vendorModelId": "placeholder.vendorModelId",
+        "pasteJSON": "placeholder.pasteJSON",
+        "dropFilesHere": "placeholder.dropFilesHere"
+      }
+    },
+    "status": {
+      "description": "状态相关键名",
+      "keys": {
+        "loading": "status.loading",
+        "saving": "status.saving",
+        "processing": "status.processing",
+        "updating": "status.updating",
+        "enriching": "status.enriching",
+        "noSessions": "status.noSessions",
+        "noSessionsHint": "status.noSessionsHint",
+        "noProjects": "status.noProjects",
+        "noMessages": "status.noMessages",
+        "noMatches": "status.noMatches",
+        "parsing": "status.parsing",
+        "detectedServers": "status.detectedServers",
+        "showingResults": "status.showingResults"
+      }
+    },
+    "help": {
+      "description": "帮助提示相关键名",
+      "keys": {
+        "refreshSessionIndex": "help.refreshSessionIndex",
+        "rename": "help.rename",
+        "reloadSessionFile": "help.reloadSessionFile",
+        "restoreLayout": "help.restoreLayout",
+        "expandConversation": "help.expandConversation",
+        "selectProjectForNew": "help.selectProjectForNew",
+        "startNewInProject": "help.startNewInProject",
+        "openInFinder": "help.openInFinder",
+        "returnToHistory": "help.returnToHistory"
+      }
+    },
+    "menu": {
+      "description": "菜单相关键名",
+      "keys": {
+        "new": "menu.new",
+        "resume": "menu.resume",
+        "editTitleComment": "menu.editTitleComment",
+        "assignToProject": "menu.assignToProject",
+        "revealInFinder": "menu.revealInFinder",
+        "exportMarkdown": "menu.exportMarkdown",
+        "deleteSession": "menu.deleteSession",
+        "newProject": "menu.newProject"
+      }
+    },
+    "sort": {
+      "description": "排序相关键名",
+      "keys": {
+        "oldestFirst": "sort.oldestFirst",
+        "newestFirst": "sort.newestFirst"
+      }
+    },
+    "columns": {
+      "description": "表格列相关键名",
+      "keys": {
+        "default": "columns.default",
+        "modelId": "columns.modelId",
+        "reasoning": "columns.reasoning",
+        "toolUse": "columns.toolUse",
+        "vision": "columns.vision",
+        "longContext": "columns.longContext"
+      }
+    },
+    "options": {
+      "description": "选项相关键名",
+      "keys": {
+        "chat": "options.chat",
+        "responses": "options.responses",
+        "stdio": "options.stdio",
+        "sse": "options.sse",
+        "streamableHttp": "options.streamableHttp",
+        "diff": "options.diff",
+        "preview": "options.preview"
+      }
+    },
+    "fields": {
+      "description": "表单字段相关键名",
+      "keys": {
+        "name": {
+          "label": "fields.name.label",
+          "description": "fields.name.description"
+        },
+        "codexBaseURL": {
+          "label": "fields.codexBaseURL.label",
+          "description": "fields.codexBaseURL.description"
+        },
+        "claudeBaseURL": {
+          "label": "fields.claudeBaseURL.label",
+          "description": "fields.claudeBaseURL.description"
+        },
+        "apiKeyEnv": {
+          "label": "fields.apiKeyEnv.label",
+          "description": "fields.apiKeyEnv.description"
+        },
+        "wireAPI": {
+          "label": "fields.wireAPI.label",
+          "description": "fields.wireAPI.description"
+        },
+        "url": "fields.url",
+        "command": "fields.command",
+        "args": "fields.args",
+        "env": "fields.env",
+        "headers": "fields.headers"
+      }
+    },
+    "providers": {
+      "description": "提供商相关键名",
+      "keys": {
+        "k2": "providers.k2",
+        "glm": "providers.glm",
+        "deepseek": "providers.deepseek",
+        "other": "providers.other",
+        "activeProvider": "providers.activeProvider"
+      }
+    },
+    "sessionInfo": {
+      "description": "会话信息相关键名",
+      "keys": {
+        "started": "sessionInfo.started",
+        "duration": "sessionInfo.duration",
+        "model": "sessionInfo.model",
+        "approval": "sessionInfo.approval",
+        "cliVersion": "sessionInfo.cliVersion",
+        "originator": "sessionInfo.originator",
+        "workingDirectory": "sessionInfo.workingDirectory",
+        "fileSize": "sessionInfo.fileSize"
+      }
+    },
+    "title": {
+      "description": "标题相关键名",
+      "keys": {
+        "settings": "title.settings",
+        "newProvider": "title.newProvider",
+        "editProvider": "title.editProvider",
+        "newMCPServer": "title.newMCPServer",
+        "mcpmate": "title.mcpmate",
+        "presetCommands": "title.presetCommands",
+        "editSession": "title.editSession"
+      }
+    },
+    "about": {
+      "description": "关于页面相关键名",
+      "keys": {
+        "title": "about.title",
+        "description": "about.description",
+        "version": "about.version",
+        "buildTimestamp": "about.buildTimestamp",
+        "latestRelease": "about.latestRelease",
+        "projectURL": "about.projectURL",
+        "repository": "about.repository",
+        "licenses": "about.licenses"
+      }
+    },
+    "tooltip": {
+      "description": "工具提示相关键名",
+      "keys": {
+        "delete": "tooltip.delete",
+        "edit": "tooltip.edit",
+        "refresh": "tooltip.refresh",
+        "openInTerminal": "tooltip.openInTerminal"
+      }
+    }
+  },
+  "conventions": {
+    "description": "命名约定",
+    "rules": [
+      "使用小写字母和点号分隔层次",
+      "按功能分组：actions.*, dialogs.*, settings.* 等",
+      "复合键名使用 camelCase 或点号分隔",
+      "避免使用缩写，保持语义清晰",
+      "添加注释说明键名用途"
+    ]
+  },
+  "examples": {
+    "description": "使用示例",
+    "code": [
+      "// SwiftUI 中使用",
+      "Text(\"settings.title\")",
+      "Button(\"actions.delete\") { }",
+      "",
+      "// 带参数的字符串",
+      "String(format: NSLocalizedString(\"dialogs.deleteProvider.message\", comment: \"\"), providerName)",
+      "",
+      "// 在 .strings 文件中",
+      "\"settings.title\" = \"设置\";",
+      "\"actions.delete\" = \"删除\";",
+      "\"dialogs.deleteProvider.message\" = \"确定要删除 \\\"%@\\\" 吗？此操作无法撤销。\";"
+    ]
+  },
+  "usage_instructions": {
+    "description": "使用说明",
+    "steps": [
+      "1. 在修改 Swift 文件时，使用键名而非硬编码字符串",
+      "2. 在相应的 .strings 文件中添加翻译",
+      "3. 保持键名的一致性，参考本映射表",
+      "4. 定期更新本映射表以添加新键名",
+      "5. 团队成员共享此文件以保持一致性"
+    ]
+  }
+}

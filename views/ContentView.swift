@@ -221,40 +221,40 @@ struct ContentView: View {
         view
             // Confirm stopping a running embedded session (place before any .alert modifiers)
             .confirmationDialog(
-                "Stop running session?",
+                "dialogs.stopSession.title",
                 isPresented: Binding<Bool>(
                     get: { confirmStopState != nil },
                     set: { if !$0 { confirmStopState = nil } }
                 ),
                 titleVisibility: .visible
             ) {
-                Button("Stop", role: .destructive) {
+                Button("actions.stop", role: .destructive) {
                     if let st = confirmStopState {
                         stopEmbedded(forID: st.sessionId)
                         confirmStopState = nil
                     }
                 }
-                Button("Cancel", role: .cancel) { confirmStopState = nil }
+                Button("actions.cancel", role: .cancel) { confirmStopState = nil }
             } message: {
-                Text("The embedded terminal appears to be running. Stopping now will terminate the current Codex/Claude task.")
+                Text("dialogs.stopSession.message")
             }
             .alert(item: $alertState) { state in
                 Alert(
                     title: Text(state.title),
                     message: Text(state.message),
-                    dismissButton: .default(Text("OK"))
+                    dismissButton: .default(Text("actions.ok"))
                 )
             }
             .alert(
-                "Delete selected sessions?", isPresented: $deleteConfirmationPresented,
+                "dialogs.deleteSession.title", isPresented: $deleteConfirmationPresented,
                 presenting: Array(selection)
             ) { ids in
-                Button("Cancel", role: .cancel) {}
-                Button("Move to Trash", role: .destructive) {
+                Button("actions.cancel", role: .cancel) {}
+                Button("actions.moveToTrash", role: .destructive) {
                     deleteSelections(ids: ids)
                 }
             } message: { _ in
-                Text("Session files will be moved to Trash and can be restored in Finder.")
+                Text("dialogs.deleteSession.message")
             }
             .fileImporter(
                 isPresented: $selectingSessionsRoot,
@@ -330,7 +330,7 @@ struct ContentView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            .help("Refresh session index")
+            .help("help.refreshSessionIndex")
             .disabled(viewModel.isEnriching || viewModel.isLoading)
         }
         .padding(.horizontal, 4)
@@ -446,7 +446,7 @@ struct ContentView: View {
                             .foregroundStyle(.tertiary)
                     }
                     .buttonStyle(.plain)
-                    .help("Rename / Add Comment")
+                    .help("help.renameAddComment")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -464,7 +464,7 @@ struct ContentView: View {
                         Button {
                             showNewWithContext = true
                         } label: {
-                            Label("New With Context…", systemImage: "text.append")
+                            Label("actions.newWithContext", systemImage: "text.append")
                         }
 
                         let providers = viewModel.allowedSources(for: focused)
@@ -478,28 +478,28 @@ struct ContentView: View {
                                         launchNewSession(
                                             for: current, using: sessionSource, style: .preferred)
                                     } label: {
-                                        Label("Use Preferred Launch", systemImage: "gearshape")
+                                        Label("actions.usePreferredLaunch", systemImage: "gearshape")
                                     }
                                     Button {
                                         guard let current = focusedSummary else { return }
                                         launchNewSession(
                                             for: current, using: sessionSource, style: .terminal)
                                     } label: {
-                                        Label("Open in Terminal", systemImage: "terminal")
+                                        Label("actions.openInTerminal", systemImage: "terminal")
                                     }
                                     Button {
                                         guard let current = focusedSummary else { return }
                                         launchNewSession(
                                             for: current, using: sessionSource, style: .iterm)
                                     } label: {
-                                        Label("Open in iTerm2", systemImage: "app.fill")
+                                        Label("actions.openInIterm2", systemImage: "app.fill")
                                     }
                                     Button {
                                         guard let current = focusedSummary else { return }
                                         launchNewSession(
                                             for: current, using: sessionSource, style: .warp)
                                     } label: {
-                                        Label("Open in Warp", systemImage: "app.gift.fill")
+                                        Label("actions.openInWarp", systemImage: "app.gift.fill")
                                     }
                                     if viewModel.preferences.defaultResumeUseEmbeddedTerminal {
                                         Button {
@@ -509,7 +509,7 @@ struct ContentView: View {
                                             )
                                         } label: {
                                             Label(
-                                                "Open Embedded Terminal",
+                                                "actions.openEmbeddedTerminal",
                                                 systemImage: "rectangle.badge.plus")
                                         }
                                     }
@@ -519,7 +519,7 @@ struct ContentView: View {
                             }
                         }
                     } else {
-                        Text("Select a session to start a new conversation")
+                        Text("placeholder.selectSessionForNew")
                     }
                 } label: {
                     if let focused {
