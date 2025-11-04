@@ -25,7 +25,7 @@ struct SettingsView: View {
                     SettingsToolbarCoordinator.shared.configure(toolbar: toolbar)
                     window.toolbar = toolbar
                 }
-                window.title = "Settings"
+                window.title = "settings.title"
                 // Ensure the system titlebar bottom hairline is shown to unify
                 // appearance across all settings pages.
                 window.titlebarSeparatorStyle = .line
@@ -142,10 +142,10 @@ struct SettingsView: View {
         settingsScroll {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("General Settings")
+                    Text("settings.general.title")
                         .font(.title2)
                         .fontWeight(.bold)
-                    Text("Configure basic application settings and file paths")
+                    Text("settings.general.description")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
